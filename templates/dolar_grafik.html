@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Döviz Bazlı Analiz | Giriş</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --input-bg: #0f172a;
+            --border: #334155;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { width: 100%; max-width: 550px; }
+
+        .glass-card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .header-section { text-align: center; margin-bottom: 35px; }
+        .header-section i {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));
+        }
+
+        h1 { font-size: 26px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
+
+        .form-group { margin-bottom: 22px; }
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.3s;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="glass-card">
+        <div class="header-section">
+            <i class="fas fa-chart-bar"></i>
+            <h1>Döviz Bazlı Analiz</h1>
+            <p>Seçtiğiniz varlığın reel değer değişimini hesaplayın</p>
+        </div>
+
+        <form action="{{ url_for('dolar_bazlı_grafik_ekranı') }}" method="POST">
+
+            <div class="form-group">
+                <label>Analiz Edilecek Varlık</label>
+                <input type="text" name="hisse" placeholder="Örn: THYAO.IS, BTC-USD, EREGL.IS" required>
+            </div>
+
+            <div class="form-group">
+                <label>Baz Alınacak Birim (Karşılaştırma)</label>
+                <select name="kur_tipi">
+                    <optgroup label="Majör Dövizler">
+                        <option value="USDTRY=X" selected>ABD Doları (USD)</option>
+                        <option value="EURTRY=X">Euro (EUR)</option>
+                        <option value="GBPTRY=X">İngiliz Sterlini (GBP)</option>
+                        <option value="CHFTRY=X">İsviçre Frangı (CHF)</option>
+                    </optgroup>
+                    <optgroup label="Kıymetli Madenler">
+                        <option value="GC=F">Altın Ons</option>
+                        <option value="SI=F">Gümüş Ons</option>
+                        <option value="PA=F">Paladyum  Ons</option>
+                    </optgroup>
+                    <optgroup label="Enerji">
+                         <option value="BZ=F">Brent Petrol</option>
+                         <option value="CL=F">Amerikan Teksas Petrol</option>
+                    </optgroup>
+
+                </select>
+            </div>
+
+            <div class="grid-inputs">
+                <div class="form-group">
+                    <label>Zaman Aralığı</label>
+                    <select name="period">
+                        <option value="1d">1 Gün</option>
+                        <option value="5d">5 Gün</option>
+                        <option value="1mo">1 Ay</option>
+                        <option value="6mo" selected>6 Ay</option>
+                        <option value="1y">1 Yıl</option>
+                        <option value="2y">2 Yıl</option>
+                        <option value="5y">5 Yıl</option>
+                        <option value="max">Maksimum</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mum Aralığı</label>
+                    <select name="interval">
+                        <option value="1m">1 Dakika</option>
+                        <option value="5m">5 Dakika</option>
+                        <option value="1h">1 Saat</option>
+                        <option value="1d" selected>1 Gün</option>
+                        <option value="1wk">1 Hafta</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                ANALİZİ BAŞLAT <i class="fas fa-search-dollar"></i>
+            </button>
+        </form>
+
+        <div class="footer-note">
+            Yahoo Finance Data Engine &copy; 2026
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

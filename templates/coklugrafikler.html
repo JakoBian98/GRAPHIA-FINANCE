@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚔️ Hisse Düellosu Giriş</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            width: 450px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        h2 { color: #1e293b; margin-bottom: 30px; font-weight: 800; font-size: 26px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-sizing: border-box;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: #4f46e5; background: #f8faff; }
+        .vs {
+            font-weight: 900;
+            color: #4f46e5;
+            margin: 10px 0;
+            font-size: 22px;
+            opacity: 0.8;
+            letter-spacing: -1px;
+        }
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-3px);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>⚔️ Hisse Düellosu</h2>
+    <form action="/Coklu_Grafik_Sonuc" method="POST">
+
+        <div class="input-group">
+            <label>1. Varlık (Örn: BTC-USD veya THYAO.IS)</label>
+            <input type="text" name="hisse1" placeholder="Birinci sembolü girin" required>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="input-group">
+            <label>2. Varlık (Örn: ETH-USD veya PGSUS.IS)</label>
+            <input type="text" name="hisse2" placeholder="İkinci sembolü girin" required>
+        </div>
+
+        <div class="input-group" style="display: flex; gap: 12px;">
+            <div style="flex: 1.2;">
+                <label>Zaman Aralığı</label>
+                <select name="period">
+                    <option value="1mo">1 Ay</option>
+                    <option value="6mo">6 Ay</option>
+                    <option value="1y">1 Yıl</option>
+                    <option value="2y">2 Yıl</option>
+                    <option value="3y">3 Yıl</option>
+                    <option value="4y">4 Yıl</option>
+                    <option value="5y">5 Yıl</option>
+                    <option value="7y">7 Yıl</option>
+                    <option value="max">Maksimum (Tüm Veri)</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label>Mum Barı</label>
+                <select name="interval">
+                    <option value="1d">1 Gün</option>
+                    <option value="1wk">1 Hafta</option>
+                    <option value="1mo">1 Ay</option>
+                    <option value="1h">1 Saat</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn">KARŞILAŞTIRMAYI BAŞLAT</button>
+    </form>
+</div>
+
+</body>
+</html>

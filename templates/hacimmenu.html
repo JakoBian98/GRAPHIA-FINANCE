@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacim Analiz Girişi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { color: #1e293b; text-align: center; margin-bottom: 30px; font-weight: 700; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 8px; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: #6366f1; outline: none; }
+        .btn { width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #4f46e5; transform: translateY(-2px); }
+        .hint { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📊 Hacim Analizi</h2>
+    <form action="{{ url_for('hacim_bilgisi') }}" method="post">
+
+        <div class="input-group">
+            <label>Varlık Sembolü</label>
+            <input type="text" name="hisse" placeholder="Örn: THYAO.IS veya BTC-USD" required>
+            <div class="hint">Borsa İstanbul için sonuna .IS ekleyin.</div>
+        </div>
+
+        <div class="input-group">
+            <label>Zaman Aralığı (Periyot)</label>
+            <select name="period">
+                <option value="1mo">1 Ay</option>
+                <option value="3mo">3 Ay</option>
+                <option value="6mo" selected>6 Ay</option>
+                <option value="1y">1 Yıl</option>
+                <option value="5y">5 Yıl</option>
+                <option value="max">Maksimum</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Mum Barı (Interval)</label>
+            <select name="interval">
+                <option value="1h">1 Saat</option>
+                <option value="1d" selected>1 Gün</option>
+                <option value="1wk">1 Hafta</option>
+                <option value="1mo">1 Ay</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn">Analiz Et</button>
+    </form>
+</div>
+
+</body>
+</html>

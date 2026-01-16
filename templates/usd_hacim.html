@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USD Hacim | Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --input-bg: #0f172a;
+            --border: #334155;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header-section i {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));
+        }
+
+        h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -1px; text-transform: uppercase; }
+        p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .form-group { margin-bottom: 25px; }
+
+        input[type="text"], select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            background: #161e2d;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .info-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+
+        /* Select içindeki option'ları düzeltme */
+        option { background: var(--card); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="glass-card">
+            <div class="header-section">
+                <i class="fas fa-chart-line"></i>
+                <h1>Dolar Bazlı Hacim</h1>
+                <p>Enflasyondan arındırılmış gerçek para trafiği</p>
+            </div>
+
+            <form action="{{ url_for('usd_hacim_analiz') }}" method="post">
+                <div class="form-group">
+                    <label>Enstrüman Sembolü</label>
+                    <input type="text" name="hisse" placeholder="Örn: THYAO, BTC-USD, EREGL" required>
+                </div>
+
+                <div class="grid-inputs">
+                    <div class="form-group">
+                        <label>Zaman Aralığı (Period)</label>
+                        <select name="period">
+                            <optgroup label="Kısa Vadeli">
+                                <option value="1d">1 Gün</option>
+                                <option value="5d">1 Hafta (5G)</option>
+                                <option value="1mo">1 Ay</option>
+                            </optgroup>
+                            <optgroup label="Orta Vadeli">
+                                <option value="6mo" selected>6 Ay</option>
+                                <option value="1y">1 Yıl</option>
+                                <option value="2y">2 Yıl</option>
+                            </optgroup>
+                            <optgroup label="Uzun Vadeli">
+                                <option value="3y">3 Yıl</option>
+                                <option value="4y">4 Yıl</option>
+                                <option value="5y">5 Yıl</option>
+                                <option value="6y">6 Yıl</option>
+                                <option value="7y">7 Yıl</option>
+                                <option value="max">Maksimum (Tümü)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mum Aralığı (Interval)</label>
+                        <select name="interval">
+                            <optgroup label="İntraday (Gün İçi)">
+                                <option value="1m">1 Dakika</option>
+                                <option value="2m">2 Dakika</option>
+                                <option value="5m">5 Dakika</option>
+                                <option value="15m">15 Dakika</option>
+                                <option value="1h">1 Saat</option>
+                            </optgroup>
+                            <optgroup label="Genel Bakış">
+                                <option value="1d" selected>1 Gün</option>
+                                <option value="1wk">1 Hafta</option>
+                                <option value="1mo">1 Ay</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    ANALİZİ ÇALIŞTIR <i class="fas fa-bolt"></i>
+                </button>
+            </form>
+
+            <div class="info-footer">
+                Powered by Yahoo Finance & Python Engine &copy; 2026
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

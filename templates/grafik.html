@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Grafik Analiz Portalı</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .form-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #7f8c8d; font-size: 14px; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        input[type="submit"] { width: 100%; background-color: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        input[type="submit"]:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <h2>📈 Grafik Analizi</h2>
+    <form action="{{ url_for('grafik_penceresi') }}" method="post">
+
+        <div class="input-group">
+            <label>Hisse Sembolü (Örn: BTC-USD, AAPL, THYAO.IS)</label>
+            <input type="text" name="hisse" placeholder="Sembol girin..." required/>
+        </div>
+
+        <div class="input-group">
+            <label>Geçmiş Veri Süresi (Period)</label>
+            <select name="period">
+                <option value="1d">1 Gün</option>
+                <option value="5d">5 Gün</option>
+                <option value="1mo" selected>1 Ay</option>
+                <option value="3mo">3 Ay</option>
+                <option value="1y">1 Yıl</option>
+                <option value="max">Tümü</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Mum Aralığı (Interval)</label>
+            <select name="interval">
+                <option value="1m">1 Dakika</option>
+                <option value="15m">15 Dakika</option>
+                <option value="1h">1 Saat</option>
+                <option value="1d" selected>1 Gün</option>
+                <option value="1wk">1 Hafta</option>
+            </select>
+        </div>
+
+        <input type="submit" value="Grafiği Oluştur"/>
+    </form>
+</div>
+
+</body>
+</html>

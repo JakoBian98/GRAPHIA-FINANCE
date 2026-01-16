@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hisse }} | Karşılaştırmalı Analiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue: #3182ce;
+            --red: #e53e3e;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 40px 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Hisse Kartları Yan Yana */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-bottom: 5px solid #cbd5e0;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover { transform: translateY(-5px); }
+        .blue-border { border-color: var(--blue); }
+        .red-border { border-color: var(--red); }
+
+        .stat-card h3 { margin: 0; font-size: 14px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+        .stat-card .symbol { font-size: 28px; font-weight: 800; margin: 10px 0; display: block; }
+
+        .price-info { display: flex; justify-content: space-between; margin-top: 15px; font-size: 14px; }
+        .price-info b { color: #1e293b; }
+
+        .change-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        /* Grafik Alanı */
+        .chart-container {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: #1e293b;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .up { background: #dcfce7; color: #166534; }
+        .down { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>📊 Düello Analiz Paneli</h1>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card blue-border">
+            <h3>Birinci Varlık</h3>
+            <span class="symbol" style="color: var(--blue);">{{ sembol1 }}</span>
+            <div class="change-badge {% if df1_yuzde >= 0 %}up{% else %}down{% endif %}">
+                {% if df1_yuzde >= 0 %}+{% endif %}{{ "%.2f"|format(df1_yuzde) }}%
+            </div>
+            <div class="price-info">
+                <span>Başlangıç: <b>{{ "%.2f"|format(df1_baslangic_fiyat) }}</b></span>
+                <span>Son: <b>{{ "%.2f"|format(df1_son_fiyat) }}</b></span>
+            </div>
+        </div>
+
+        <div class="stat-card red-border">
+            <h3>İkinci Varlık</h3>
+            <span class="symbol" style="color: var(--red);">{{ sembol2 }}</span>
+            <div class="change-badge {% if df2_yuzde >= 0 %}up{% else %}down{% endif %}">
+                {% if df2_yuzde >= 0 %}+{% endif %}{{ "%.2f"|format(df2_yuzde) }}%
+            </div>
+            <div class="price-info">
+                <span>Başlangıç: <b>{{ "%.2f"|format(df2_baslangic_fiyat) }}</b></span>
+                <span>Son: <b>{{ "%.2f"|format(df2_son_fiyat) }}</b></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <img src="data:image/png;base64,{{ grafik }}" alt="Analiz Grafiği">
+        <br>
+        <a href="/Coklu_Grafik_Giris" class="btn-back">← Yeni Analiz Yap</a>
+    </div>
+</div>
+
+</body>
+</html>

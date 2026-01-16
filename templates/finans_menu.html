@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finansal Analiz Terminali</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Arka plan süslemesi */
+        .glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .terminal-card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-area {
+            margin-bottom: 30px;
+        }
+
+        .logo-area i {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-top: 8px;
+            margin-bottom: 30px;
+        }
+
+        /* Form Elemanları */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 14px;
+            padding: 15px 15px 15px 45px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .footer-links {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow"></div>
+
+    <div class="container">
+        <div class="terminal-card">
+            <div class="logo-area">
+                <i class="fas fa-chart-line"></i>
+                <h1>QUANTUM ANALYTICS</h1>
+                <p>Gerçek zamanlı piyasa verisi ve hacim analizi</p>
+            </div>
+
+            <form action="{{ url_for('Finance') }}" method="post">
+                <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="hisse" placeholder="Sembol giriniz (Örn: THYAO)" required>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Analizi Başlat <i class="fas fa-chevron-right"></i>
+                </button>
+            </form>
+
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-bolt"></i> Hızlı Fiyat</a>
+                <a href="#"><i class="fas fa-database"></i> Geçmiş Veri</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Finans Analiz Platformu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 50px; text-align: center; }
+        .container { max-width: 1100px; margin: auto; }
+        h1 { color: #1a237e; margin-bottom: 40px; font-size: 32px; font-weight: 800; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: #333;
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-color: #3949ab;
+        }
+
+        .icon { font-size: 45px; margin-bottom: 15px; }
+
+        .card h3 {
+            margin: 10px 0;
+            color: #1a237e;
+            font-size: 20px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Dolar kartları için özel yeşil dokunuş */
+        .usd-card {
+            background: linear-gradient(to bottom right, #ffffff, #f1fdf4);
+            border-bottom: 4px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 Finans Analiz Portalı</h1>
+    <div class="menu-grid">
+        <a href="/Finans" class="card">
+            <span class="icon">🔍</span>
+            <h3>Parametre Bilgi</h3>
+            <p>Anlık fiyat, yüksek/düşük ve hacim verilerini listeleyin.</p>
+        </a>
+
+        <a href="/Hacim_Ekranı" class="card">
+            <span class="icon">📈</span>
+            <h3>Hacim Analizi</h3>
+            <p>Hacim sapmaları, Z-Skor ve VWAP verilerini takip edin.</p>
+        </a>
+
+        <a href="/Grafikler" class="card">
+            <span class="icon">🖼️</span>
+            <h3>Teknik Grafik</h3>
+            <p>Fiyat hareketlerini ve trendleri görsel olarak inceleyin.</p>
+        </a>
+
+        <a href="/Coklu_Grafik_Giris" class="card">
+            <span class="icon">⚔️</span>
+            <h3>Hisse Düellosu</h3>
+            <p>İki hisseyi yüzde bazlı karşılaştırın ve korelasyonu görün.</p>
+        </a>
+
+        <a href="/USD_HACİM" class="card usd-card">
+            <span class="icon">💰</span>
+            <h3>Dolar Bazlı Hacim</h3>
+            <p>Gerçek para girişini dolar bazlı derinlikle analiz edin.</p>
+        </a>
+
+        <form id="usdForm" action="/Dolar_Bazlı_Grafik" method="POST" style="display: none;"></form>
+        <a href="javascript:void(0);" onclick="document.getElementById('usdForm').submit();" class="card usd-card">
+            <span class="icon">💵</span>
+            <h3>Döviz Bazlı Analiz</h3>
+            <p>Hisselerin gerçek değerini enflasyondan arındırılmış görün.</p>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

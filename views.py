@@ -9,6 +9,7 @@ import io
 import base64
 import numpy as np
 import os
+import re
 
 
 matplotlib.use('Agg')
@@ -23,9 +24,6 @@ def selamün_aleyküm():
     return render_template("hello.html")
 
 
-@app.route("/login" , methods = ['POST','GET'])
-def login():
-    return render_template("login.html")
 
 @app.route("/Finans")
 def finans():
@@ -50,12 +48,312 @@ def Finance():
                 df.columns = df.columns.get_level_values(0)
             fiyat = df.iloc[-1]
             tarih = df.index[-1].strftime("%Y.%m.%d")
-            kapanıs = df['Close'].iloc[-1]
-            en_yuksek = df['High'].iloc[-1]
-            en_dusuk = df['Low'].iloc[-1]
+            kapanıs = float(df['Close'].iloc[-1])
+            en_yuksek = df['High'].max()
+            en_dusuk = df['Low'].min()
+            beta = veri.info.get('Beta')
+            market_cap = veri.info.get('marketCap')
+            temettü = veri.info.get('dividendYield')
+            temettü_verimi = veri.info.get('trailingAnnualDividendYield')
+            toplam_hisse_sayısı = veri.info.get("sharesOutstanding")
+            max_geçmiş = veri.history(period="max",auto_adjust=False,actions=False)
+            öz_kaynak_karlılığı = veri.info.get("returnOnEquity")
+            defter_değeri = veri.info.get('priceToBook')
+            borç_bölü_özkaynak_oran = veri.info.get('debtToEquity')
+            short_ratio = veri.info.get('shortRatio',np.nan)
+            kurumsal_yatırımcılar_sahiplik_oranı = veri.info.get('heldPercentInstitutions')
+            adres = veri.info.get('address1')
+            çalışan_sayısı = veri.info.get("fullTimeEmployees")
+            ceo = veri.info.get('companyOfficers',np.nan)[0]['name']
+            gelir = veri.info.get('totalRevenue',np.nan)
+            gelir_bölü_çalışan = gelir / çalışan_sayısı
+            halka_arz_ms = veri.info.get('firstTradeDateMilliseconds')
+            geçmiş_hepsi = veri.history(period="max",interval="1d")
+            özet = veri.info.get("longBusinnesSummary")
+            öneriler = veri.recommendations
+            long_name = veri.info.get('longName')
+            bilanço_tarihi = "Belirtilmemiş"
+            bilanço_beklenti = "Veri Yok"
+            kar = veri.earnings_dates
+            veri_ath = yf.download(sembol, period="max", interval="1d", progress=False)
+            veri_ath = pd.DataFrame(veri_ath)
+            if isinstance(veri_ath.columns, pd.MultiIndex):
+                veri_ath.colunms = veri_ath.columns.get_level_values(0)
+            ATH = float(veri_ath['Close'].max())
+            if kar is not None or not  kar.empty:
+                future_earnings = kar[kar.index > pd.Timestamp.now(tz='UTC')]
+                if not future_earnings.empty:
+                   en_yakın_bilanço = future_earnings.iloc[0]
+                   bilanço_tarihi = en_yakın_bilanço.strftime("%Y,%m-%d")
+                   bilanço_beklenti = future_earnings.iloc[0].get('EPS Estimate')
+                   if pd.notnull(bilanço_beklenti):
+                       bilanço_beklenti = bilanço_beklenti
+
+            ema_df = veri.history(period="1y")
+            if not ema_df.empty:
+                if isinstance(ema_df.columns,pd.MultiIndex):
+                    ema_df.columns = ema_df.columns.get_level_values(0)
+
+            ema_listesi_sözlük = {}
+            ema_listesi_tablo = []
+            periyotlar = range(20,220,20)
+            son_fiyat = ema_df['Close'].iloc[-1]
+            alış_sinyali = 0
+            satış_sinyali = 0
+            for p in periyotlar:
+                sütun_adı = f"EMA-{p}"
+                ema_değeri = ema_df['Close'].ewm(span=p,adjust=False).mean()
+                güncel_ema = float(ema_değeri.iloc[-1])
+                ema_listesi_sözlük[sütun_adı] = round(güncel_ema,2)
+
+                if son_fiyat > güncel_ema:
+                    alış_sinyali += 1
+                elif son_fiyat == güncel_ema:
+                    alış_sinyali += 0
+                    satış_sinyali += 0
+                else:
+                    satış_sinyali += 1
+
+                if alış_sinyali > 7:
+                    gösterge = "Güçlü Al"
+                    ema_renk = "Succes"
+                elif alış_sinyali > 5:
+                    gösterge = "Al"
+                    ema_renk = "Succes"
+                elif satış_sinyali >7:
+                    gösterge = "Güçlü Sat"
+                    ema_renk = "danger"
+                elif satış_sinyali >5:
+                    gösterge = "Sat"
+                    ema_renk = "danger"
+                else:
+                    gösterge = "NÖTR/BEKLE"
+                    ema_renk = "warning"
+
+                ema_listesi_tablo.append({
+                    'periyot': f"EMA-{p}",
+                    'deger': güncel_ema,
+                    'sinyal': gösterge,
+                    'renk': ema_renk
+                })
+
+
+            if öneriler is not None and not öneriler.empty:
+                son_öneriler = öneriler.tail(5)
+            if özet:
+                kuruluş_yılı_bul = re.search(r"founded in (\d{4})", özet)
+                if kuruluş_yılı_bul:
+                    kuruluş_yılı = kuruluş_yılı_bul.group(1)
+                else:
+                    kuruluş_yılı = "Belirtilmemiş"
+            else:
+                kuruluş_yılı = "Bilgi Yok"
+            beklenen_hbk = veri.info.get('epsForward')
+            likitide_oranı = veri.info.get('quickRatio')
+            if likitide_oranı:
+                if likitide_oranı >= 1:
+                    likitide_durumu = f"{likitide_oranı} Likitide Çok Güçlü Borçları Anında kapıyabilir"
+                elif likitide_oranı > 0.80:
+                    likitide_durumu =f"{likitide_oranı} Likitide Dengeli . Nakit Akışın Devamı gerekli"
+                elif likitide_oranı > 0.50:
+                    likitide_durumu = f"{likitide_oranı} Likitide Zayıf Dikkatli Olunması Gerekli"
+                else:
+                    likitide_durumu = f"{likitide_oranı} Likitide Krizi : Şirketin Nakit Durumu Çok Tehlikeli"
+            else:
+                likite_durumu = f"Veri Alınamadı"
+            peg_ratio = veri.info.get('trailingPegRatio')
+
+
+
+            if peg_ratio:
+                if peg_ratio <1:
+                    peg_durum = f"{peg_ratio} Hisse Çok Ucuz (Kelepir)"
+                elif peg_ratio <2:
+                    peg_durum = f"{peg_ratio} Hisse Fiyatı Makul"
+                else:
+                    peg_durum = f"{peg_ratio} Büyümesine Göre Pahalı"
+            else:
+                peg_durum = f"Veri Alınamadı"
+
+            alış = veri.info.get('ask')
+            satış = veri.info.get('bid')
+            if alış and satış:
+                if alış > satış * 2:
+                    iştah = f"Alıcılar Çok Güçlü : Tahtada Alış Baskısı Var"
+                elif satış > alış * 2:
+                    iştah = f"Satıcılar Çok Güçlü : Tahtada Satoş Baskısı Var"
+                else:
+                    iştah = "Piyasa Dengeli : Alıcılar Ve Satıcılar Eşit Güçte"
+            else:
+                iştah = "Veri Alınamadı"
+
+            ma50 = veri.info.get('fiftyDayAverage')
+            ma200 =  veri.info.get('twoHundredDayAverage')
+            if ma50 and ma200:
+                if ma50 > ma200:
+                    ma_sinyal = "Golden Cross: Kısa Vadeli Trend Uzun Vadeyi Kırdı Boğa Piyasası Sinyali"
+                elif ma50 < ma200:
+                    ma_sinyal = "Death Cross: Kısa Vadeli Trend Uzun Vadenin Altında Ayı Piyası Sinyali"
+                else:
+                    ma_sinyal = "Nötr: Ortalamalar Birbirine Çok Yakın"
+            else:
+                ma_sinyal = np.nan
+            if not kuruluş_yılı:
+                kuruluş_yılı = "Belirtilmemiş"
+
+            if not geçmiş_hepsi.empty:
+                ilk_gün = geçmiş_hepsi.iloc[0]
+                halka_arz = ilk_gün['Open']
+            else:
+                geçmiş_hepsi = "Bulunmadı"
+            if halka_arz_ms:
+                halka_arz_tarihi = datetime.fromtimestamp(halka_arz_ms / 1000.0).strftime('%d.%m.%Y')
+            else:
+                halka_arz_tarihi = np.nan
+            web_sitesi = veri.info.get('website')
+            if not gelir or çalışan_sayısı or gelir_bölü_çalışan:
+                gelir = np.nan
+                çalışan_sayısı = np.nan
+                gelir_bölü_çalışan = np.nan
+
+            cari_oran = veri.info.get("currentRatio")
+            if not cari_oran:
+                cari_oran = np.nan
+            if cari_oran >= 1.5:
+                cari_durum = f"{cari_oran} Güçlü : Şirket Kısa Vade Borçlarını Rahatça Ödeyebilir"
+            elif cari_oran >= 1:
+                cari_durum = f"{cari_oran} Sınırda : Borç Ödeme Kapasitesi Yeterli Ama İzlenmeli"
+            else:
+                cari_durum = f"{cari_oran} Riskli : Kısa Vadeli Borçlar Nakit Varlıklardan Fazla"
+
+            if not kurumsal_yatırımcılar_sahiplik_oranı:
+                kurumsal_yatırımcılar_sahiplik_oranı = np.nan
+            yüzde_sahiplik = kurumsal_yatırımcılar_sahiplik_oranı * 100
+            if yüzde_sahiplik > 70:
+                sahiplik_durum = f"{yüzde_sahiplik} Yüksek :  Kurumsal Yatırımcılar Bu Hisseye Güveniyor"
+            elif yüzde_sahiplik > 40:
+                sahiplik_durum = f"{yüzde_sahiplik} Orta : Kurumsal Ve Bireseysel Yatırımcı Oranı Dengeli"
+            else:
+                sahiplik_durum = f"{yüzde_sahiplik} Düşük : Bireysel Yatırımcı Oranı Düşük"
+
+            short_interest = veri.info.get('sharesShort', np.nan)
+            if short_ratio >3:
+                durum = f"Dikkat Açığa Satış Baskısı Var"
+            elif short_ratio <3:
+                durum = "Açığa Satış Oranı Düşük (Piyasa İyimser)"
+            else:
+                durum = f"Açığa Satış Oranı Normal"
+
+            if not borç_bölü_özkaynak_oran:
+                borç_bölü_özkaynak_oran = np.nan
+            if not defter_değeri:
+                defter_değeri = np.nan
+            net_kar_marjı = veri.info.get('profitMargins')
+            if not net_kar_marjı:
+                net_kar_marjı = np.nan
+            if öz_kaynak_karlılığı:
+                öz_kaynak_karlılığı = veri.info.get("returnOnEquity") * 100
+            else:
+                öz_kaynak_karlılığı = np.nan
+            hisse_başına_kar = veri.info.get('trailingEps')
+            if not hisse_başına_kar:
+                hisse_başına_kar = np.nan
+            FAVÖK = veri.info.get('enterpriseToEbitda')
+            if not FAVÖK:
+                FAVÖK = np.nan
+            hedef_fiyat = veri.info.get("targetMeanPrice")
+            tavsiye = veri.info.get('recommendationKey')
+            potansiyel = np.nan
+            if hedef_fiyat:
+                potansiyel = ((hedef_fiyat - kapanıs) / kapanıs) * 100
+            if not tavsiye or not hedef_fiyat:
+                hedef_fiyat = np.nan
+                tavsiye = np.nan
+
+            skor = 0
+            maks_skor = 100
+
+            if cari_oran and cari_oran >= 1.5:
+                skor += 20
+            elif cari_oran and cari_oran >= 1:
+                skor += 10
+
+            if likitide_oranı >= 1:
+                skor += 20
+            elif likitide_oranı >= 0.7:
+                skor += 10
+
+            if öz_kaynak_karlılığı and öz_kaynak_karlılığı > 20:
+                skor += 20
+            elif öz_kaynak_karlılığı and öz_kaynak_karlılığı > 10:
+                skor += 10
+
+            if peg_ratio and peg_ratio < 1:
+                skor += 20
+            elif peg_ratio and peg_ratio < 2:
+                skor += 10
+
+            if ma50 and ma200 and ma50 > ma200:
+                skor += 20
+
+            if skor >=80:
+                güven_mesajı = f"🚀Çok Güçlü : Finansal Ve Teknik Göstergeler Mükemmel"
+                renk = "succes" #HTML DE YEŞİL
+            elif skor>= 50:
+                güven_mesajı = f"⚖️Dengeli : Şirket Sağlam Ama Bazı Riskler Barındırıyor"
+                renk = "warning" #HTML DE SARI
+            else:
+                güven_mesajı = f"⚠️Riskli : Göstergeler Zayıf Dikkatli Olunmalı"
+                renk = "danger" #HTML DE KIRMIZI
+
+            insider_verisi = veri.get_insider_transactions()
+            alımlar = insider_mesajı = "İçeriden Alım Bilgisi Yok"
+            insider_renk = "text-dim"
+            if insider_verisi is not None and not insider_verisi.empty:
+                alımlar = insider_verisi[insider_verisi['Transaction'] == "Buy"]
+                toplam_alınan_lot = alımlar['Shares'].sum() if not alımlar.empty else 0
+                if toplam_alınan_lot > 0:
+                    insider_mesajı = (f"Olumlu : Yöneticiler Bu Şirkete Güveniyor")
+                    insider_renk = "succes"
+                    skor += 15
+                else:
+                    insider_mesajı = "Son Dönemde Yönetici Seviyesinde Alım Saptanmadı"
+
+            zirveden_uzaklık = ((kapanıs - ATH) / ATH) * 100
+
+            fk_oran = None
+            try:
+                gelir_tablosu = veri.financials
+                if not gelir_tablosu.empty and 'Net Income' in gelir_tablosu.index:
+                    yıllık_net_kar = gelir_tablosu.loc['Net Income'].iloc[0]
+                    if toplam_hisse_sayısı and yıllık_net_kar:
+                        hbk = yıllık_net_kar / toplam_hisse_sayısı
+                        fk_oran = kapanıs / hbk
+            except:
+                fk_oran = None
             if "=X" in sembol or "TRY" in sembol or "USD" in sembol:
                 hacim = np.nan
                 ortalama_hacim = np.nan
+                toplam_hisse_sayısı = np.nan
+                gelir_tablosu = np.nan
+                hbk = np.nan
+                fk_oran = np.nan
+                market_cap = np.nan
+                temettü = np.nan
+                öz_kaynak_karlılığı = np.nan
+                hedef_fiyat = np.nan
+                tavsiye = np.nan
+                potansiyel = np.nan
+                kuruluş_yılı = np.nan
+                ma_sinyal = np.nan
+                iştah = np.nan
+                peg_durum = np.nan
+                likite_durumu = np.nan
+                güven_mesajı = np.nan
+                renk = np.nan
+                ceo = np.nan
+                özet = np.nan
+
             else:
                 hacim = fiyat["Volume"]
                 ortalama_hacim = df["Volume"].mean()
@@ -70,7 +368,24 @@ def Finance():
                                    kapanıs=kapanıs,
                                    en_yuksek=en_yuksek,
                                    en_dusuk=en_dusuk,
-                                   hacim=hacim, ortalama_hacim=ortalama_hacim)
+                                   hacim=hacim, ortalama_hacim=ortalama_hacim,fk=fk_oran,beta=beta,
+                                   market_cap=market_cap,temettü=temettü,temettü_verim=temettü_verimi,
+                                   ath=ATH,zirveden_uzaklık=zirveden_uzaklık,
+                                   oz_kaynak_karlılığı = öz_kaynak_karlılığı,
+                                   hedef_fiyat = hedef_fiyat,
+                                   potansiyel = potansiyel,
+                                   tavsiye = tavsiye,FAVÖK=FAVÖK,hisse_başına_kar=hisse_başına_kar,
+                                   net_kar_marjı = net_kar_marjı,defter_değeri=defter_değeri,
+                                   borç_bölü_özkaynak_oran = borç_bölü_özkaynak_oran,açığa_satış_durumu=durum,
+                                   kurumsal_sahiplik = yüzde_sahiplik,sahiplik_durum=sahiplik_durum,
+                                   cari_oran = cari_oran,cari_durum=cari_durum,
+                                   halka_arz_tarihi = halka_arz_tarihi,
+                                   adres = adres , web_site = web_sitesi,çalışan_sayısı=çalışan_sayısı,
+                                   gelir_bölü_çalışan = gelir_bölü_çalışan,halka_arz_fiyatı=halka_arz,
+                                   kuruluş_yılı=kuruluş_yılı,indikatör=iştah,renk=renk,güven_mesajı=güven_mesajı,peg_durum=peg_durum,insider_mesajı=insider_mesajı,öneriler=öneriler,
+                                   ema_listesi = ema_listesi_tablo,ema_sözlük=ema_listesi_sözlük,long_name=long_name,bilanço_tarihi=bilanço_tarihi,bilanço_beklenti=bilanço_beklenti)
+
+
     except ValueError:
         return "<h1>Seçtiğiniz Kriterlere Uygun Veri Bulunamadı </h1>"
     except KeyError:
@@ -80,7 +395,9 @@ def Finance():
     except ZeroDivisionError:
         return "<h1>Sistemde Matematiksel Hata Saptandı</h1>"
     except Exception:
-        return "<h1>Sistemsel Bir Hata oluştu"
+        return f"<h1>Sistemsel Bir Hata oluştu"
+
+
 
 @app.route("/Hacim_Ekranı")
 def hacim_ekranı():
@@ -120,7 +437,9 @@ def hacim_bilgisi():
             vwap = (tp * df['Volume']).cumsum() / df['Volume'].cumsum()
 
             son_vwap = float(vwap.iloc[-1])
-            son_fiyat = float(df['Close'].iloc[-1])
+            son_fiyat = float(df['Close'].iloc[-2])
+            önceki_fiyat = float(df['Close'].iloc[-1])
+            fiyat_değişim = ((son_fiyat - önceki_fiyat) / önceki_fiyat) * 100
             vwap_fark_yuzde = ((son_fiyat - son_vwap) / son_vwap) * 100
             son_hacim = float(df["Volume"].iloc[-1])
             en_yüksek_hacim = float(df["Volume"].max())
@@ -133,6 +452,32 @@ def hacim_bilgisi():
             tarih = df.index
             hacim = df["Volume"]
             ilk_hacim = float(hacim.iloc[0])
+            hacim_durum = "Yüksek" if son_hacim > ortalama_hacim else "Düşük"
+            if fiyat_değişim >= 0.5 and hacim_durum == "Yüksek":
+                trend_mesaj = "Trend 0naylandı Sağlıklı Yükseliş"
+                trend_detay = "Fiyat Yükselişi Yüksek Hacimle Destekleniyor"
+                trend_renk = "succes"
+                trend_ikon = "fa-check-circle"
+            elif fiyat_değişim >= 0.5 and hacim_durum == "Düşük":
+                trend_mesaj = "Zayıf Yükseliş : Boğa Tuzağı Olabilir"
+                trend_detay = "Fiyat Yükseliyor Ama Hacim Desteği"
+                trend_renk = "warning"
+                trend_ikon = "fa-exclamation-triangle"
+            elif fiyat_değişim <= 0.5 and hacim_durum == "Yüksek":
+                trend_mesaj = "Güçlü Satış Baskısı Ayı OLabilir"
+                trend_detay = "Fiyat Yüksek Hacimle Düşüyor . Kurumsal Veya Panik Satışı Hakim"
+                trend_renk = "danger"
+                trend_ikon = "fa-arrow-down"
+            elif fiyat_değişim <=0.5 and hacim_durum == "Düşük":
+                trend_mesaj = "Kararsız Geri Çekilme"
+                trend_detay = "Fiyat Düşüyor Ama Hacim Çok Zayıf Ciddi Trend Değişimi Yok"
+                trend_renk = "info"
+                trend_ikon = "fa-pause-circle"
+            else:
+                trend_mesaj = "Yatay Bant"
+                trend_detay = "Fiyat Ve Hacim Dengede Piyasa Yeni Bir Yöntem Tayin Ediyor"
+                trend_renk = "info"
+
             hacim_fark_yüzde = ((son_hacim - ilk_hacim) / ilk_hacim) * 100
             if son_hacim > ortalama_hacim + hacim_std:
                 renk = "red"
@@ -161,11 +506,14 @@ def hacim_bilgisi():
                        high_volume_idx=high_volume_idx,
                        son_vwap=son_vwap,
                        vwap_fark=round(vwap_fark_yuzde, 2),
+                       vwap_fark_yuzde=vwap_fark_yuzde,
                        en_düşük_hacim=en_düşük_hacim,
                        min_volume_idx=min_volume_idx,
                        z_skor=z_skor,
                        renk=renk,ilk_tarih=df.index[0].strftime("%Y-%m-%d"),
-                       son_tarih=df.index[-1].strftime("%Y-%m-%d"),hacim_grafik_url=hacim_grafik_url,hacim_fark_yüzde=round(hacim_fark_yüzde),ilk_hacim=ilk_hacim)
+                       son_tarih=df.index[-1].strftime("%Y-%m-%d"),hacim_grafik_url=hacim_grafik_url,hacim_fark_yüzde=round(hacim_fark_yüzde),ilk_hacim=ilk_hacim,
+                       trend_renk=trend_renk,trend_ikon=trend_ikon,trend_mesaj=trend_mesaj,fiyat_değişim=fiyat_değişim)
+
     except ValueError:
         return "<h1>Seçtiğiniz Kriterlere Uygun Veri Bulunamadı </h1>"
     except KeyError:
@@ -194,7 +542,7 @@ def grafik_penceresi():
         if not period or not interval:
             period = "6mo"
             interval = "1d"
-        doviz_liste = ["USD", "EUR", "TRY", "GBP", "CHF", "JPY", "SAR"]
+        doviz_liste = ["USD", "TRY", "GBP", "CHF", "JPY", "SAR"]
         if any(birim in sembol for birim in doviz_liste) and "=X" not in sembol:
             sembol += "=X"
 
@@ -202,7 +550,7 @@ def grafik_penceresi():
         if df.empty:
             return "Hisse Senedi Bulunamadı"
         if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.droplevel(1)
+            df.columns = df.columns.get_level_values(0)
         fiyat = df["Close"]
         degisim = fiyat.iloc[-1] - fiyat.iloc[0]
         degisim_yuzde = (degisim / fiyat.iloc[0]) * 100
@@ -210,6 +558,12 @@ def grafik_penceresi():
         ticker = yf.Ticker(sembol)
         info = ticker.info
         long_name = info.get('LongName', sembol)
+        veri_ath = yf.download(sembol,period="max",interval="1d",progress=False)
+        veri_ath = pd.DataFrame(veri_ath)
+        if isinstance(veri_ath.columns,pd.MultiIndex):
+            veri_ath.columns = veri_ath.columns.get_level_values(0)
+        ath = float(veri_ath['Close'].max())
+        atl = float(veri_ath['Close'].min())
 
         plt.switch_backend('Agg')
         fig, ax1 = plt.subplots(figsize=(10, 6))
@@ -227,7 +581,7 @@ def grafik_penceresi():
 
         return render_template("analizpaneli.html", hisse=sembol, fiyat_degisim=round(degisim_yuzde, 2),
                                fiyat_renk=fiyat_renk,
-                               grafik=grafik_url)
+                               grafik=grafik_url,ath=ath,atl=atl)
 
     except ValueError:
         return "<h1>Seçtiğiniz Kriterlere Uygun Veri Bulunamadı </h1>"
@@ -318,7 +672,8 @@ def çoklu_grafikler_penceresi():
         return "<h1>Bağlantı Hatası : Lütfen İnternetinizi Kontrol Edin</h1>"
     except ZeroDivisionError:
         return "<h1>Sistemde Matematiksel Hata Saptandı</h1>"
-    except Exception:
+    except Exception as e:
+        print(e)
         return "<h1>Sistemsel Bir Hata oluştu"
 
 @app.route("/Dolar_Bazlı_Grafik",methods=['POST','GET'])
@@ -943,7 +1298,7 @@ def borsa_paneli():
             "ALARK": {"ad": "Alarko Holding", "sektor": "Holding"},
             "GSDHO": {"ad": "GSD Holding", "sektor": "Holding"},
             "IHLAS": {"ad": "İhlas Holding", "sektor": "Holding"},
-            "SISE": {"ad": "Şişecam", "sektor": "Holding"},  # Cam ama dev bir holding yapısıdır
+            "SISE": {"ad": "Şişecam", "sektor": "Holding"},
             "METRO": {"ad": "Metro Holding", "sektor": "Holding"},
             "VERUS": {"ad": "Verusa Holding", "sektor": "Holding"},
             "DERHL": {"ad": "Derluks Yatırım Hol.", "sektor": "Holding"},

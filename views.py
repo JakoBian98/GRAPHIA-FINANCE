@@ -9,7 +9,12 @@ import io
 import base64
 import numpy as np
 import os
+import plotly.graph_objects as go
 import re
+from plotly.utils import PlotlyJSONEncoder
+import json
+import plotly.io as pio
+
 
 
 matplotlib.use('Agg')
@@ -78,7 +83,7 @@ def Finance():
             veri_ath = yf.download(sembol, period="max", interval="1d", progress=False)
             veri_ath = pd.DataFrame(veri_ath)
             if isinstance(veri_ath.columns, pd.MultiIndex):
-                veri_ath.colunms = veri_ath.columns.get_level_values(0)
+                veri_ath.columns = veri_ath.columns.get_level_values(0)
             ATH = float(veri_ath['Close'].max())
             if kar is not None or not  kar.empty:
                 future_earnings = kar[kar.index > pd.Timestamp.now(tz='UTC')]
@@ -529,60 +534,137 @@ def hacim_bilgisi():
 def grafikler():
     return render_template("grafik.html")
 
-@app.route("/Grafik Penceresi",methods=["POST"])
+@app.route("/Grafik Penceresi", methods=["POST"])
 def grafik_penceresi():
     try:
-        sembol = request.form.get("hisse")
-        interval = request.form.get("interval")
-        period = request.form.get("period")
-        GEÇERLİ_PERIOD = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "max"]
-        GEÇERLİ_INTERVAL = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "1wk", "1mo"]
-        if not sembol:
-            return "Hisse Senedi Girniz"
-        if not period or not interval:
-            period = "6mo"
-            interval = "1d"
-        doviz_liste = ["USD", "TRY", "GBP", "CHF", "JPY", "SAR"]
-        if any(birim in sembol for birim in doviz_liste) and "=X" not in sembol:
-            sembol += "=X"
+            sembol = request.form.get("hisse")
+            interval = request.form.get("interval")
+            period = request.form.get("period",)
 
-        df = yf.download(sembol, period=period, interval=interval, progress=False)
-        if df.empty:
-            return "Hisse Senedi Bulunamadı"
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        fiyat = df["Close"]
-        degisim = fiyat.iloc[-1] - fiyat.iloc[0]
-        degisim_yuzde = (degisim / fiyat.iloc[0]) * 100
-        fiyat_renk = "green" if degisim >= 0 else "red"
-        ticker = yf.Ticker(sembol)
-        info = ticker.info
-        long_name = info.get('LongName', sembol)
-        veri_ath = yf.download(sembol,period="max",interval="1d",progress=False)
-        veri_ath = pd.DataFrame(veri_ath)
-        if isinstance(veri_ath.columns,pd.MultiIndex):
-            veri_ath.columns = veri_ath.columns.get_level_values(0)
-        ath = float(veri_ath['Close'].max())
-        atl = float(veri_ath['Close'].min())
+            if not sembol:
+                return "Hisse boş"
 
-        plt.switch_backend('Agg')
-        fig, ax1 = plt.subplots(figsize=(10, 6))
-        ax1.plot(df.index, fiyat, color=fiyat_renk, linewidth=2)
-        ax1.fill_between(df.index, fiyat, fiyat.min(), color=fiyat_renk, alpha=0.1)
-        ax1.set_title(f"{sembol} ({long_name}) | Değisim : {degisim:.2f} (%{degisim_yuzde}) ")
-        ax1.grid(True, alpha=0.2)
-        plt.tight_layout()
 
-        img = io.BytesIO()
-        fig.savefig(img, format='png', bbox_inches='tight')
-        img.seek(0)
-        grafik_url = base64.b64encode(img.getvalue()).decode('utf8')
-        plt.close(fig)
+            df = yf.download(sembol, period=period, interval=interval, progress=False,auto_adjust=True)
+            if df.empty:
+                return "Hisse Senedi Bulunamadı"
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            df = df.dropna()
+            ticker = yf.Ticker(sembol)
+            info = ticker.info
+            long_name = info.get('longName', sembol)
+            veri_ath = yf.download(sembol, period="max", interval="1d", progress=False)
+            veri_ath = pd.DataFrame(veri_ath)
+            if isinstance(veri_ath.columns, pd.MultiIndex):
+                veri_ath.columns = veri_ath.columns.get_level_values(0)
+            ath = float(veri_ath['Close'].max())
+            atl = float(veri_ath['Close'].min())
+            fiyat_serisi = df['Close']
+            son_fiyat = float(fiyat_serisi.iloc[-1])
+            ilk_fiyat = float(fiyat_serisi.iloc[0])
+            x_ekseni = df.index.strftime('%H:%M' if "m" in interval else '%d.%m.%y').tolist()
+            y_ekseni = fiyat_serisi.values.flatten().tolist()
+            renk = "#00ffbb" if son_fiyat >= ilk_fiyat else "#ff4b5c"
+            mum_open = df['Open'].values.flatten().tolist()
+            mum_high = df['High'].values.flatten().tolist()
+            mum_low = df['Low'].values.flatten().tolist()
+            mum_close = df['Close'].values.flatten().tolist()
+            kapanışlar = df['Close'].tolist()
+            renkler = []
 
-        return render_template("analizpaneli.html", hisse=sembol, fiyat_degisim=round(degisim_yuzde, 2),
-                               fiyat_renk=fiyat_renk,
-                               grafik=grafik_url,ath=ath,atl=atl)
 
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(
+                x=x_ekseni,
+                y=y_ekseni,
+                mode="lines",
+                line=dict(color="#00ffbb", width=2),
+                name="Close Price"
+            ))
+
+            fig.add_hline(y=ath, line_color='green', line_dash='dash', opacity=0.3)
+
+
+            fig.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="#020617",
+                plot_bgcolor="#020617",
+                hovermode="x unified",
+                xaxis=dict(
+                    type='category',
+                    tickangle=-45,
+                    nticks=15,
+                    title="Zaman",
+                    gridcolor="rgba(255,255,255,0.05)"
+                ),
+                yaxis=dict(
+                    title="Fiyat",
+                    side="right",
+                    gridcolor="rgba(255,255,255,0.05)"
+                ),
+                margin=dict(l=40, r=40, t=30, b=40)
+            )
+
+            fig_candle = go.Figure()
+
+            fig_candle.add_trace(go.Candlestick(
+                x=x_ekseni,
+                open=mum_open,
+                high=mum_high,
+                low=mum_low,
+                close=mum_close,
+                increasing_line_color='#00ffbb',
+                decreasing_line_color='#ff4b5c',
+                name="Mum Grafiği"
+            ))
+
+            fig_candle.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="#020617",
+                plot_bgcolor="#020617",
+                hovermode="x unified",
+                xaxis=dict(
+                    type='category',
+                    tickangle=-45,
+                    nticks=15,
+                    gridcolor="rgba(255,255,255,0.05)",
+                    rangeslider_visible=False
+                ),
+                yaxis=dict(
+                    side="right",
+                    gridcolor="rgba(255,255,255,0.05)"
+                ),
+                margin=dict(l=40, r=40, t=30, b=40)
+            )
+
+            for i in range(len(kapanışlar)):
+                if i == 0:
+                    renkler.append('#4ade80')
+                elif kapanışlar[i] > kapanışlar[i-1]:
+                    renkler.append('#4ade80')
+                else:
+                    renkler.append('#f87171')
+
+
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(x=x_ekseni,y=kapanışlar,marker=dict(color=renkler),name='Fiyat Seviyesi',orientation='v',))
+            fig_bar.update_layout(template='plotly_dark',paper_bgcolor="#020617",plot_bgcolor="#020617",title='Zaman-Fiyat Grafiği (Sütun)',bargap=0.2,xaxis=dict(type='category'),yaxis=dict(side="right"))
+
+
+
+            return render_template(
+                "analizpaneli.html",
+                line_json=json.dumps(fig, cls=PlotlyJSONEncoder),
+                candle_json=json.dumps(fig_candle, cls=PlotlyJSONEncoder),
+                bar_json=json.dumps(fig_bar,cls=PlotlyJSONEncoder),
+                hisse=sembol,
+                fiyat_son=round(float(son_fiyat), 2),
+                fiyat_degisim=round(((son_fiyat / ilk_fiyat) - 1) * 100, 2),
+                ath=ath,
+                atl=atl
+            )
     except ValueError:
         return "<h1>Seçtiğiniz Kriterlere Uygun Veri Bulunamadı </h1>"
     except KeyError:
@@ -622,7 +704,7 @@ def çoklu_grafikler_penceresi():
         fiyat1 = df1["Close"].astype(float)
         fiyat2 = df2["Close"].astype(float)
 
-        df1_değişim = df1.iloc[-1] - df1.iloc[0]
+        df1_değişim = df1['Close'].iloc[-1] - df1.iloc[0]
         df2_değişim = df2.iloc[-1] - df2.iloc[0]
         df1_yüzde = (df1_değişim / fiyat1.iloc[0]) * 100
         df2_yüzde = (df2_değişim / fiyat2.iloc[0]) * 100
@@ -672,8 +754,7 @@ def çoklu_grafikler_penceresi():
         return "<h1>Bağlantı Hatası : Lütfen İnternetinizi Kontrol Edin</h1>"
     except ZeroDivisionError:
         return "<h1>Sistemde Matematiksel Hata Saptandı</h1>"
-    except Exception as e:
-        print(e)
+    except Exception:
         return "<h1>Sistemsel Bir Hata oluştu"
 
 @app.route("/Dolar_Bazlı_Grafik",methods=['POST','GET'])
@@ -690,6 +771,9 @@ def dolar_bazlı_grafik_ekranı():
         dovız_tipi = request.form.get("kur_tipi")
         sembol_df = yf.download(sembol, period=period, interval=interval, progress=False)
         usd_df = yf.download(dovız_tipi, period=period, interval=interval, progress=False)
+        veri = yf.Ticker(sembol)
+        data = veri.info
+        long_name = data.get('longName')
         ilk_uc = dovız_tipi[:4]
 
         if sembol_df.empty:
@@ -722,8 +806,9 @@ def dolar_bazlı_grafik_ekranı():
             dolar_bazlı_seri = sembol_df.loc[ortak, "Close"] / usd_df.loc[ortak, "Close"]
 
         dolar_bazlı_seri = dolar_bazlı_seri.dropna()
-        en_yüksek = dolar_bazlı_seri.max()
-        en_düşük = dolar_bazlı_seri.min()
+        en_yüksek = float(dolar_bazlı_seri.max())
+        en_düşük = float(dolar_bazlı_seri.min())
+
 
 
         ilk_fiyat = float(dolar_bazlı_seri.iloc[0])
@@ -739,22 +824,30 @@ def dolar_bazlı_grafik_ekranı():
         else:
             renk = "gray"
 
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(dolar_bazlı_seri.index, dolar_bazlı_seri.values, alpha=0.5, color=renk, linewidth=2)
-        ax.fill_between(dolar_bazlı_seri.index, dolar_bazlı_seri.values, color=renk, alpha=0.3, interpolate=True)
-        ax.set_title(f"{sembol} | Değişim : {değişim} (%){toplam_degisim_yuzde} {ilk_uc} Bazlı Grafik")
-        ax.axhline(y=en_yüksek,color="green",alpha=0.4,linewidth=0.8,linestyle="--")
-        ax.axhline(y=en_düşük,color="green",alpha=0.4,linewidth=0.8,linestyle="--")
-        plt.xlabel("Tarih")
-        plt.ylabel("Fiyat")
-        plt.grid(True, alpha=0.1)
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight')
-        img.seek(0)
-        grafik_url = base64.b64encode(img.getvalue()).decode('utf8')
-        plt.close()
+        x_ekseni = dolar_bazlı_seri.index.tz_localize(None).strftime('%d.%m.%y %H:%M' if 'm' in interval else '%d.%m.%y').tolist()
+        y_ekseni = dolar_bazlı_seri.values.flatten().tolist()
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x_ekseni,
+            y=y_ekseni,
+            mode="lines",
+            line=dict(color=renk,width=3),
+            fill='tozeroy',
+            name=f"{sembol}",
+        ))
+
+        fig.add_hline(y=en_yüksek,line_color="green",line_dash='dash',opacity=0.3)
+        fig.add_hline(y=en_düşük,line_color="red",line_dash='dash',opacity=0.3)
+
+        fig.update_layout(template='plotly_dark',paper_bgcolor="#020617",plot_bgcolor="#020617",xaxis=dict(type='category', nticks=12, gridcolor="rgba(255,255,255,0.05)"),yaxis=dict(side="right", gridcolor="rgba(255,255,255,0.05)", tickformat=".4f"),margin=dict(l=10,r=10,t=10,b=40),hovermode='x unified')
+        grafik_json = json.dumps(fig, cls=PlotlyJSONEncoder)
+
+
+
         return render_template("Dolar_Bazlı_Grafik.html",
-                               grafik=grafik_url,
+                               long_name = long_name,
+                               grafik=grafik_json,
                                sembol=sembol,
                                son_fiyat=round(son_fiyat, 2),
                                toplam_degisim_yuzde=round(toplam_degisim_yuzde, 2),

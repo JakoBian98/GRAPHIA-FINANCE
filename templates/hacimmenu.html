@@ -3,56 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hacim Analiz Girişi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>TERMINAL_ACCESS | Hacim Analizi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        h2 { color: #1e293b; text-align: center; margin-bottom: 30px; font-weight: 700; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 8px; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: 0.3s; }
-        input:focus, select:focus { border-color: #6366f1; outline: none; }
-        .btn { width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        .btn:hover { background: #4f46e5; transform: translateY(-2px); }
-        .hint { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        :root {
+            --bg-color: #020617;
+            --panel-color: #0f172a;
+            --accent-color: #00ffbb;
+            --text-color: #f8fafc;
+            --border-color: #1e293b;
+            --input-bg: #020617;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .card {
+            background: var(--panel-color);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 30px rgba(0, 255, 187, 0.05);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .card::before {
+            content: "SECURE_CONNECTION_ESTABLISHED";
+            position: absolute;
+            top: -25px;
+            left: 10px;
+            font-size: 10px;
+            color: var(--accent-color);
+            opacity: 0.6;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+        }
+
+        .input-group { margin-bottom: 25px; }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-color);
+            box-sizing: border-box;
+            transition: 0.3s;
+            font-family: 'Fira Code', monospace;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 187, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            filter: brightness(1.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 187, 0.3);
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pulse {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>📊 Hacim Analizi</h2>
+    <h2><i class="fas fa-terminal"></i> VOLUME_SCAN</h2>
+
     <form action="{{ url_for('hacim_bilgisi') }}" method="post">
 
         <div class="input-group">
-            <label>Varlık Sembolü</label>
-            <input type="text" name="hisse" placeholder="Örn: THYAO.IS veya BTC-USD" required>
-            <div class="hint">Borsa İstanbul için sonuna .IS ekleyin.</div>
+            <label>ASSET_TICKER (SEMBOLE)</label>
+            <input type="text" name="hisse" placeholder="THYAO.IS / BTC-USD / NVDA" required>
+            <div class="hint"><span class="pulse"></span> Use .IS for Borsa Istanbul assets.</div>
         </div>
 
         <div class="input-group">
-            <label>Zaman Aralığı (Periyot)</label>
+            <label>TIME_RANGE (PERİYOT)</label>
             <select name="period">
+                <option value="1d">1 Gün</option>
+                <option value="5d">5 Gün</option>
                 <option value="1mo">1 Ay</option>
                 <option value="3mo">3 Ay</option>
                 <option value="6mo" selected>6 Ay</option>
                 <option value="1y">1 Yıl</option>
+                <option value="2y">2 Yıl</option>
                 <option value="5y">5 Yıl</option>
-                <option value="max">Maksimum</option>
+                <option value="10y">10 Yıl</option>
+                <option value="ytd">Yılbaşından Bugüne</option>
+                <option value="max">Maksimum Veri</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>Mum Barı (Interval)</label>
+            <label>DATA_INTERVAL (ARALIK)</label>
             <select name="interval">
+                <option value="1m">1 Dakika (Max 7 Gün)</option>
+                <option value="2m">2 Dakika</option>
+                <option value="5m">5 Dakika</option>
+                <option value="15m">15 Dakika</option>
+                <option value="30m">30 Dakika</option>
+                <option value="60m">60 Dakika</option>
+                <option value="90m">90 Dakika</option>
                 <option value="1h">1 Saat</option>
                 <option value="1d" selected>1 Gün</option>
+                <option value="5d">5 Gün</option>
                 <option value="1wk">1 Hafta</option>
                 <option value="1mo">1 Ay</option>
             </select>
         </div>
 
-        <button type="submit" class="btn">Analiz Et</button>
+        <button type="submit" class="btn">/ START_ANALYSIS</button>
     </form>
 </div>
 

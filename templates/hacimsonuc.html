@@ -3,204 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ sembol }} | Hacim Analiz Raporu</title>
+    <title>{{ hisse }} | Hacim Analiz Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        :root {
+            --bg-color: #020617;
+            --card-bg: #0f172a;
+            --accent: #00ffbb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #1e293b;
+        }
+
         body {
-            background-color: #f0f2f5;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 40px 20px;
+            padding: 30px 15px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .terminal-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
         }
 
-        .card {
-            background: #ffffff;
-            width: 100%;
-            /* GENİŞLİK ARTIRILDI */
-            max-width: 950px;
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f1f4f8;
-        }
-
-        .ticker-badge {
-            background: #2b6cb0;
-            color: white;
-            padding: 8px 25px;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: 900;
+        .pulse {
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
             display: inline-block;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
+            margin-right: 8px;
+            animation: blink 1.5s infinite;
         }
 
-        /* İstatistik Paneli Layoutu */
-        .top-section {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .stats-column { display: flex; flex-direction: column; gap: 15px; }
-
-        .mini-card {
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 15px;
-            border: 1px solid #edf2f7;
-            transition: transform 0.2s;
-        }
-        .mini-card:hover { transform: translateY(-3px); }
-
-        .label { display: block; font-size: 11px; color: #718096; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
-        .value { font-size: 18px; font-weight: 700; color: #1a202c; }
-        .sub-date { display: block; font-size: 10px; color: #a0aec0; margin-top: 3px; }
-
-        /* Z-Skor Alanı - Merkeze Alındı */
-        .z-score-center {
+        .trend-radar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 6px solid {% if trend_renk == 'succes' %}var(--success){% elif trend_renk == 'danger' %}var(--danger){% elif trend_renk == 'warning' %}var(--warning){% else %}var(--info){% endif %};
+            border-radius: 12px;
+            padding: 25px 30px;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            background: #fdfdfd;
-            border-radius: 20px;
-            border: 2px dashed #e2e8f0;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .trend-icon {
+            font-size: 40px;
+            color: {% if trend_renk == 'succes' %}var(--success){% elif trend_renk == 'danger' %}var(--danger){% elif trend_renk == 'warning' %}var(--warning){% else %}var(--info){% endif %};
+        }
+
+        .trend-info h2 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .trend-info p { margin: 5px 0 0; color: var(--text-dim); font-size: 13px; }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 20px;
         }
 
-        .z-box {
-            padding: 15px 35px;
-            border-radius: 15px;
-            background-color: {{ renk }};
-            color: white;
-            font-size: 36px;
+        .z-value {
+            font-size: 40px;
             font-weight: 900;
-            margin: 10px 0;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            font-family: 'JetBrains Mono', monospace;
+            color: {% if z_skor > 1.5 %}var(--success){% elif z_skor < -1.5 %}var(--danger){% else %}var(--accent){% endif %};
         }
 
-        /* VWAP Alanı */
-        .vwap-box {
-            background: #ebf8ff;
-            border-radius: 20px;
-            padding: 20px;
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-row:last-child { border: none; }
+        .label { color: var(--text-dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; }
+
+        .vwap-panel {
+            grid-column: span 2;
             display: flex;
             justify-content: space-around;
+            background: rgba(0, 255, 187, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 30px;
         }
 
-        /* GRAFİK ALANI - TAM GENİŞLİK */
-        .chart-wrapper {
-            background: #ffffff;
-            border-radius: 20px;
-            border: 1px solid #edf2f7;
-            padding: 15px;
+        .chart-box {
+            grid-column: span 2;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            min-height: 450px;
+        }
+
+        .fark-pozitif { color: var(--success); }
+        .fark-negatif { color: var(--danger); }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             margin-top: 20px;
-        }
-
-        .chart-wrapper img {
-            width: 100%; /* Konteynere tam yayılması için */
-            height: auto;
-            border-radius: 10px;
-            display: block;
-        }
-
-        .btn-nav {
-            display: block;
-            text-align: center;
-            margin-top: 30px;
-            color: #718096;
+            color: var(--accent);
             text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid var(--accent);
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
-        .btn-nav:hover { color: #2b6cb0; }
 
-        @media (max-width: 850px) {
-            .top-section { grid-template-columns: 1fr; }
-            .card { padding: 20px; }
+        .btn-back:hover { background: var(--accent); color: var(--bg-color); }
+
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .vwap-panel { flex-direction: column; gap: 20px; }
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="header">
-        <div class="ticker-badge">{{ sembol }}</div>
-        <h1 style="margin:0; font-size: 24px; color: #2d3748;">Detaylı Hacim Analiz Raporu</h1>
+<div class="container">
+    <div class="terminal-header">
+        <span><span class="pulse"></span> SYSTEM_STATUS: CORE_V3 // ANALYSIS_COMPLETED</span>
+        <span>RANGE: {{ ilk_tarih }} - {{ son_tarih }}</span>
     </div>
 
-    <div class="top-section">
-        <div class="stats-column">
-            <div class="mini-card">
-                <span class="label">GÜNCEL HACİM</span>
+    <div class="trend-radar">
+        <div class="trend-icon">
+            <i class="fas {{ trend_ikon or 'fa-microchip' }}"></i>
+        </div>
+        <div class="trend-info">
+            <p style="text-transform: uppercase; letter-spacing: 2px; font-weight: 700; color: var(--accent);">{{ hisse }} // SIGNAL_REPORT</p>
+            <h2>{{ trend_mesaj }}</h2>
+            <p>{{ trend_detay }}</p>
+        </div>
+        <div style="margin-left: auto; text-align: right;">
+            <div class="label">Fiyat Değişimi</div>
+            <div class="value {% if fiyat_değişim >= 0 %}fark-pozitif{% else %}fark-negatif{% endif %}" style="font-size: 24px;">
+                {% if fiyat_değişim >= 0 %}+{% endif %}{{ "%.2f"|format(fiyat_değişim or 0) }}%
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div class="label">Hacim Z-Skoru (Güç)</div>
+                    <div class="z-value">{{ "%.2f"|format(z_skor or 0) }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="label">Hacim Delta</div>
+                    <div class="value {% if hacim_fark_yüzde >= 0 %}fark-pozitif{% else %}fark-negatif{% endif %}">
+                        {% if hacim_fark_yüzde >= 0 %}+{% endif %}{{ hacim_fark_yüzde or 0 }}%
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-dim); margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <i class="fas fa-info-circle"></i> Z-Skoru, hacmin ortalamadan sapmasını ölçer. 1.5+ seviyeleri "Sıradışı Hacim"dir.
+            </p>
+        </div>
+
+        <div class="glass-card">
+            <div class="data-row">
+                <span class="label">Anlık Hacim</span>
                 <span class="value">{{ "{:,.0f}".format(son_hacim or 0) }}</span>
             </div>
-            <div class="mini-card">
-                <span class="label">PERİYOT ORTALAMASI</span>
+            <div class="data-row">
+                <span class="label">Ortalama Hacim</span>
                 <span class="value">{{ "{:,.0f}".format(ortalama_hacim or 0) }}</span>
             </div>
-        </div>
-
-        <div class="z-score-center">
-            <span class="label">HACİM GÜCÜ (Z-SKOR)</span>
-            <div class="z-box">{{ "%.2f"|format(z_skor or 0) }}</div>
-            <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Hacim Değişimi: %{{ hacim_fark_yüzde }}</span>
-        </div>
-
-        <div class="stats-column">
-            <div class="mini-card" style="border-right: 4px solid #38a169;">
-                <span class="label">EN YÜKSEK HACİM</span>
-                <span class="value">{{ "{:,.0f}".format(en_yüksek_hacim or 0) }}</span>
-                <span class="sub-date">Tarih: {{ high_volume_idx }}</span>
-            </div>
-            <div class="mini-card" style="border-right: 4px solid #e53e3e;">
-                <span class="label">EN DÜŞÜK HACİM</span>
-                <span class="value">{{ "{:,.0f}".format(en_düşük_hacim or 0) }}</span>
-                <span class="sub-date">Tarih: {{ min_volume_idx }}</span>
+            <div class="data-row">
+                <span class="label">Zirve Hacim Tarihi</span>
+                <span class="value" style="color: var(--warning);">{{ high_volume_idx }}</span>
             </div>
         </div>
+
+        <div class="vwap-panel">
+            <div>
+                <div class="label">VWAP Kurumsal Maliyet</div>
+                <div class="value" style="color: var(--accent); font-size: 20px;">{{ "{:,.2f}".format(son_vwap or 0) }}</div>
+            </div>
+            <div>
+                <div class="label">Fiyat/VWAP Sapması</div>
+                <div class="value {% if vwap_fark_yuzde >= 0 %}fark-pozitif{% else %}fark-negatif{% endif %}" style="font-size: 20px;">
+                    {% if vwap_fark_yuzde >= 0 %}+{% endif %}{{ vwap_fark or 0 }}%
+                </div>
+            </div>
+            <div style="max-width: 250px; text-align: left;">
+                <div class="label">Analiz Notu</div>
+                <div style="font-size: 11px; font-weight: 500;">
+                    {% if vwap_fark and vwap_fark >= 0 %}
+                        Fiyat VWAP üstünde: <span class="fark-pozitif">BULLISH</span>. Kurumsal maliyetin üzerinde tutunuyor.
+                    {% else %}
+                        Fiyat VWAP altında: <span class="fark-negatif">BEARISH</span>. Satış baskısı hissediliyor.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span class="label"><i class="fas fa-chart-area"></i> Hacim Projeksiyonu</span>
+                <span style="font-size: 10px; color: var(--text-dim);">Dinamik Teknik Analiz</span>
+            </div>
+            <div id="volumeChart" style="width:100%; height:400px;"></div>
+        </div>
     </div>
 
-    <div class="vwap-box">
-        <div>
-            <span class="label">VWAP Fiyatı</span>
-            <span class="value" style="color: #2b6cb0;">${{ "{:,.2f}".format(son_vwap or 0) }}</span>
-        </div>
-        <div style="width: 2px; background: #bee3f8;"></div>
-        <div>
-            <span class="label">Fiyat/VWAP Farkı</span>
-            <span class="value {% if vwap_fark >= 0 %}fark-pozitif{% else %}fark-negatif{% endif %}" style="font-size: 22px;">
-                %{{ vwap_fark or 0 }}
-            </span>
-        </div>
+    <div style="text-align: center; margin-bottom: 50px;">
+        <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> / TERMINAL_RESET</a>
     </div>
-
-    <div class="chart-wrapper">
-        <div style="padding: 0 0 10px 10px; border-bottom: 1px solid #f1f4f8; margin-bottom: 15px;">
-            <span class="label"><i class="fas fa-chart-area"></i> Hacim Projeksiyonu</span>
-        </div>
-        {% if hacim_grafik_url %}
-            <img src="data:image/png;base64,{{ hacim_grafik_url }}" alt="Hacim Analiz Grafiği">
-        {% else %}
-            <div style="text-align: center; padding: 50px; color: #a0aec0;">Grafik verisi yüklenemedi.</div>
-        {% endif %}
-    </div>
-
-    <a href="/Hacim_Ekranı" class="btn-nav"><i class="fas fa-search"></i> Yeni Analiz Yap</a>
 </div>
+
+<script>
+    const hacimData = {{ hacim_json | safe }};
+    Plotly.newPlot('volumeChart', hacimData.data, hacimData.layout, {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    });
+</script>
 
 </body>
 </html>

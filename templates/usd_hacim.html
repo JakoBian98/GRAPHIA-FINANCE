@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USD Hacim | Terminal</title>
+    <title>Multi-Currency Hacim | Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -98,6 +98,53 @@
             gap: 20px;
         }
 
+        /* Yeni: Döviz Seçenekleri Grid ve Kaydırma Alanı */
+        .currency-selector {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 seçenek için */
+            gap: 10px;
+            overflow-x: auto; /* Kaydırılabilirlik */
+            padding-bottom: 10px;
+            scrollbar-width: none; /* Firefox için barı gizle */
+        }
+
+        .currency-selector::-webkit-scrollbar {
+            display: none; /* Chrome/Safari için barı gizle */
+        }
+
+        .currency-option {
+            position: relative;
+            text-align: center;
+        }
+
+        .currency-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .currency-box {
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+            display: block;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .currency-option input:checked + .currency-box {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
         .submit-btn {
             width: 100%;
             background: var(--accent);
@@ -131,7 +178,6 @@
             opacity: 0.6;
         }
 
-        /* Select içindeki option'ları düzeltme */
         option { background: var(--card); color: white; }
     </style>
 </head>
@@ -140,15 +186,41 @@
     <div class="container">
         <div class="glass-card">
             <div class="header-section">
-                <i class="fas fa-chart-line"></i>
-                <h1>Dolar Bazlı Hacim</h1>
-                <p>Enflasyondan arındırılmış gerçek para trafiği</p>
+                <i class="fas fa-coins"></i>
+                <h1>Relatif Hacim Analizi</h1>
+                <p>Enflasyondan ve devalüasyondan arındırılmış gerçek hacim</p>
             </div>
 
             <form action="{{ url_for('usd_hacim_analiz') }}" method="post">
                 <div class="form-group">
                     <label>Enstrüman Sembolü</label>
                     <input type="text" name="hisse" placeholder="Örn: THYAO, BTC-USD, EREGL" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Değerleme Birimi (Döviz Tipi)</label>
+                    <div class="currency-selector">
+                        <label class="currency-option">
+                            <input type="radio" name="doviz_tipi" value="USDTRY=X" checked>
+                            <span class="currency-box">USD</span>
+                        </label>
+                        <label class="currency-option">
+                            <input type="radio" name="doviz_tipi" value="GC=F">
+                            <span class="currency-box">ALTIN</span>
+                        </label>
+                        <label class="currency-option">
+                            <input type="radio" name="doviz_tipi" value="CHFTRY=X">
+                            <span class="currency-box">İSVİÇRE FRANGI</span>
+                        </label>
+                        <label class="currency-option">
+                            <input type="radio" name="doviz_tipi" value="GBPTRY=X">
+                            <span class="currency-box">GBP</span>
+                        </label>
+                        <label class="currency-option">
+                            <input type="radio" name="doviz_tipi" value="EURTRY=X">
+                            <span class="currency-box">EUR</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="grid-inputs">
@@ -169,9 +241,7 @@
                                 <option value="3y">3 Yıl</option>
                                 <option value="4y">4 Yıl</option>
                                 <option value="5y">5 Yıl</option>
-                                <option value="6y">6 Yıl</option>
-                                <option value="7y">7 Yıl</option>
-                                <option value="max">Maksimum (Tümü)</option>
+                                <option value="max">Maksimum</option>
                             </optgroup>
                         </select>
                     </div>
@@ -179,14 +249,12 @@
                     <div class="form-group">
                         <label>Mum Aralığı (Interval)</label>
                         <select name="interval">
-                            <optgroup label="İntraday (Gün İçi)">
+                            <optgroup label="Gün İçi">
                                 <option value="1m">1 Dakika</option>
-                                <option value="2m">2 Dakika</option>
                                 <option value="5m">5 Dakika</option>
-                                <option value="15m">15 Dakika</option>
                                 <option value="1h">1 Saat</option>
                             </optgroup>
-                            <optgroup label="Genel Bakış">
+                            <optgroup label="Genel">
                                 <option value="1d" selected>1 Gün</option>
                                 <option value="1wk">1 Hafta</option>
                                 <option value="1mo">1 Ay</option>
@@ -196,7 +264,7 @@
                 </div>
 
                 <button type="submit" class="submit-btn">
-                    ANALİZİ ÇALIŞTIR <i class="fas fa-bolt"></i>
+                    HACİM ANALİZİNİ BAŞLAT <i class="fas fa-bolt"></i>
                 </button>
             </form>
 

@@ -324,7 +324,7 @@
 </div>
         <div class="data-row"><span class="label">Bilanço Tarihi</span><span class="value">{{ bilanço_tarihi }}</span></div>
         <div class="data-row"><span class="label">Beklenti</span><span class="value">{{ bilanço_beklenti }}</span></div>
-        <div class="status-box status-neutral">Market Cap: {{ "{:,.0f}".format(market_cap) }}</div>
+        <div class="status-box status-neutral">Market Cap: {{ market_cap if market_cap else 'N/A' }}</div>
     </div>
 
         <div class="glass-card full-width-card">

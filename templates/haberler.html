@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE_V3 | Market Intelligence Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #020617; --panel: #0f172a; --accent: #00ffbb;
+            --border: #1e293b; --text: #f8fafc; --subtext: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Fira Code', monospace;
+            margin: 0; padding: 30px;
+        }
+
+        .header {
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { margin: 0; font-size: 1.5rem; color: var(--accent); letter-spacing: 2px; }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        /* LİNK KARTI */
+        .news-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .news-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 25px;
+            height: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 187, 0.1);
+        }
+
+        .card-tag {
+            font-size: 0.6rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .news-title {
+            font-size: 1.05rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .news-footer {
+            font-size: 0.7rem;
+            color: var(--subtext);
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .back-btn {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 15px;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .back-btn:hover { background: var(--accent); color: var(--bg); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-terminal"></i> MARKET_FEED_V3</h1>
+        <a href="/" class="back-btn">EXIT_TO_CORE</a>
+    </div>
+
+    <div class="news-grid">
+        {% for haber in haberler_listesi %}
+        <a href="{{ haber.link }}" target="_blank" class="news-link">
+            <div class="news-card">
+                <span class="card-tag">[ OPEN_EXTERNAL_SOURCE ]</span>
+                <div class="news-title">{{ haber.baslik }}</div>
+                <div class="news-footer">
+                    <span><i class="fas fa-building"></i> {{ haber.kaynak }}</span>
+                    <span><i class="far fa-clock"></i> {{ haber.zaman }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

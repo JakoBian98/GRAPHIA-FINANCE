@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE_V3 | Fiyat Alarmı Kur</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .alarm-container {
+            background-color: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 { text-align: center; color: #00ffbb; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #94a3b8; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: white;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00ffbb;
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1rem;
+        }
+        button:hover { background-color: #00cc96; transform: translateY(-2px); }
+        .note { font-size: 0.8rem; color: #64748b; margin-top: 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="alarm-container">
+    <h2>🚀 Fiyat Alarmı Kur</h2>
+    <form action="/set_alarm_kaydet" method="POST">
+        <div class="form-group">
+            <label for="email">E-posta Adresiniz</label>
+            <input type="email" id="email" name="email" placeholder="ornek@gmail.com" required>
+        </div>
+
+        <div class="form-group">
+            <label for="sembol">Hisse/Kripto Sembolü</label>
+            <input type="text" id="sembol" name="sembol" placeholder="Örn: BTC-USD veya AAPL" required>
+        </div>
+
+        <div class="form-group">
+            <label for="hedef_fiyat">Hedef Fiyat ($)</label>
+            <input type="number" step="0.000001" id="hedef_fiyat" name="hedef_fiyat" placeholder="Örn: 55000" required>
+        </div>
+
+        <button type="submit">Alarmı Aktif Et</button>
+
+<button type="button" onclick="kisiselAlarmaGit()"
+        style="background-color: transparent; border: 1px solid #00ffbb; color: #00ffbb; margin-top: 0.5rem;">
+    Aktif Alarmlarımı Görüntüle
+</button>
+
+<script>
+function kisiselAlarmaGit() {
+    const emailValue = document.getElementById('email').value;
+    if (emailValue) {
+        // Kullanıcıyı e-posta parametresiyle listeleme sayfasına uçurur
+        window.location.href = "/alarmlari_listele?email=" + encodeURIComponent(emailValue);
+    } else {
+        alert("Lütfen önce e-posta adresinizi girin!");
+    }
+}
+</script>
+    </form>
+    <p class="note">Fiyat belirlediğiniz değerin <b>altına</b> düştüğünde anlık bildirim alacaksınız.</p>
+</div>
+
+</body>
+</html>

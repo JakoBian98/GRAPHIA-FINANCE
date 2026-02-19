@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAPHIA | Analiz Raporu — {{ sembol }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.15);
+            --border: rgba(51, 65, 85, 0.5);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --gold: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 70%);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            padding: 1.25rem 2rem;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main {
+            flex: 1;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            width: 100%;
+        }
+
+        .hero-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+        }
+
+        .symbol-title {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .main-profit {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            letter-spacing: -2px;
+        }
+
+        .profit-text { color: var(--success); }
+        .loss-text { color: var(--danger); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-header i { color: var(--accent); font-size: 1rem; }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-label { color: var(--text-dim); }
+        .stat-value { font-family: 'Fira Code', monospace; font-weight: 600; }
+
+        .power-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(99, 102, 241, 0.1));
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .power-info h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+        .power-info p { font-size: 0.8rem; color: var(--text-dim); }
+
+        .power-value {
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .power-pct {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: var(--accent); color: var(--bg-deep); }
+        .btn-outline { border: 1px solid var(--border); color: var(--text-dim); }
+        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .main-profit { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">
+            <i class="fa-solid fa-chart-pie"></i> GRAPHIA<span>.REPORT</span>
+        </div>
+        <div style="font-family: 'Fira Code'; font-size: 0.7rem; color: var(--success);">
+            <i class="fa-solid fa-circle"></i> SYSTEM_ACTIVE
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="hero-card">
+            <div class="symbol-title">{{ sembol }} Toplam Performans</div>
+            <div class="main-profit {% if gerçek_kar >= 0 %}profit-text{% else %}loss-text{% endif %}">
+                {% if gerçek_kar >= 0 %}+{% endif %}{{ "%.2f"|format(kar_oranı) }}%
+            </div>
+            <p style="color: var(--text-dim); font-size: 0.9rem;">
+                Net P/L: <span style="color: #fff; font-weight: 600;">{{ "%.2f"|format(gerçek_kar) }}</span> Para Birimi
+            </p>
+        </div>
+
+        <div class="power-card">
+            <div class="power-info">
+                <h3><i class="fa-solid fa-scale-balanced"></i> Satın Alma Gücü Değişimi</h3>
+                <p>Başlangıca göre kıyaslanan varlık karşılığı</p>
+                <div style="margin-top: 5px; font-size: 0.75rem; font-family: 'Fira Code';">
+                    Final Varlık: <span style="color: var(--accent);">{{ "%.4f"|format(final_varlik_miktari) }} Birim</span>
+                </div>
+            </div>
+            <div class="power-value">
+                <span class="power-pct {% if varlik_bazli_yuzde >= 0 %}profit-text{% else %}loss-text{% endif %}">
+                    {% if varlik_bazli_yuzde >= 0 %}+{% endif %}{{ "%.2f"|format(varlik_bazli_yuzde) }}%
+                </span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Fark: {{ "%.4f"|format(varlik_degisim_farki) }} Birim</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="info-card">
+                <div class="card-header"><i class="fa-solid fa-wallet"></i> Yatırım Detayı</div>
+                <div class="stat-row">
+                    <span class="stat-label">Anapara</span>
+                    <span class="stat-value">{{ "%.2f"|format(baslangic_miktarı) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Hisse Adedi</span>
+                    <span class="stat-value">{{ "%.4f"|format(toplam_adet) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Elde Kalan Para</span>
+                    <span class="stat-value" style="color: var(--gold);">{{ "%.2f"|format(elde_kalan_para) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Temettü Geliri</span>
+                    <span class="stat-value" style="color: var(--success);">{{ "%.2f"|format(toplam_temettu_geliri or 0) }}</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header"><i class="fa-solid fa-tag"></i> Varlık Analizi</div>
+                <div class="stat-row">
+                    <span class="stat-label">Başlangıç Varlık</span>
+                    <span class="stat-value">{{ "%.4f"|format(başlangıç_varlık_miktarı) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Final Varlık</span>
+                    <span class="stat-value" style="color: var(--accent);">{{ "%.4f"|format(final_varlik_miktari) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Giriş Fiyatı</span>
+                    <span class="stat-value">{{ "%.2f"|format(ilk_fiyat) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Son Fiyat</span>
+                    <span class="stat-value">{{ "%.2f"|format(son_fiyat) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a href="/Kar_Zarar_Giriş" class="btn btn-outline">YENİ ANALİZ</a>
+            <a href="javascript:window.print()" class="btn btn-primary">RAPORU İNDİR</a>
+        </div>
+    </main>
+
+    <footer style="margin-top: auto; padding: 1.5rem; text-align: center; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border);">
+        <p>Veriler Yahoo Finance üzerinden çekilmiştir. Yatırım tavsiyesi değildir.</p>
+    </footer>
+
+</body>
+</html>

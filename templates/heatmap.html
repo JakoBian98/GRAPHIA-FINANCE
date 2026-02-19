@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASDAQ 300 — Hisse Isı Haritası</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #05070a;
+            --bg-panel: #0c0f14;
+            --bg-elevated: #11151c;
+            --border: #1e2530;
+            --text-primary: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #00ffbb;
+            --red-strong: #8b0000;
+            --red: #ff4b5c;
+            --green-soft: #00ffbb;
+            --green-strong: #006400;
+            --radius: 10px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .app {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header__title-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .header__title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header__badge {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend__label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-right: 4px;
+        }
+
+        .legend__items {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .legend__item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .legend__swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .legend__swatch--down-strong { background: var(--red-strong); }
+        .legend__swatch--down { background: var(--red); }
+        .legend__swatch--up-soft { background: var(--green-soft); }
+        .legend__swatch--up-strong { background: var(--green-strong); }
+
+        /* Period / info bar */
+        .info-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+        }
+
+        .info-bar__item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-bar__key {
+            color: var(--text-muted);
+        }
+
+        .info-bar__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Graph container */
+        .graph-wrapper {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            min-height: 520px;
+        }
+
+        .graph-wrapper .plotly {
+            width: 100% !important;
+        }
+
+        .graph-wrapper .js-plotly-plot {
+            width: 100% !important;
+        }
+
+        /* Footer / variables reference */
+        .footer-note {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .footer-note strong {
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app { padding: 16px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header__title { font-size: 1.35rem; }
+            .legend__items { gap: 10px; }
+            .graph-wrapper { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header__title-wrap">
+                <h1 class="header__title">NASDAQ 300 Isı Haritası</h1>
+                <span class="header__badge">Değişim · Hacim · Fiyat</span>
+            </div>
+            <div class="legend">
+                <span class="legend__label">Değişim</span>
+                <div class="legend__items">
+                    <span class="legend__item"><span class="legend__swatch legend__swatch--down-strong"></span> ≤−3%</span>
+                    <span class="legend__item"><span class="legend__swatch legend__swatch--down"></span> &lt;0%</span>
+                    <span class="legend__item"><span class="legend__swatch legend__swatch--up-soft"></span> 0–3%</span>
+                    <span class="legend__item"><span class="legend__swatch legend__swatch--up-strong"></span> ≥3%</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="info-bar">
+            <div class="info-bar__item">
+                <span class="info-bar__key">Hisse sayısı:</span>
+                <span class="info-bar__value" id="info-count">—</span>
+            </div>
+            <div class="info-bar__item">
+                <span class="info-bar__key">Periyot:</span>
+                <span class="info-bar__value" id="info-period">1d</span>
+            </div>
+        </div>
+
+        <div class="graph-wrapper" id="graph-container">
+            {% if graph_html %}
+            {{ graph_html|safe }}
+            {% else %}
+            <div style="display:flex;align-items:center;justify-content:center;min-height:480px;color:#64748b;font-family:'JetBrains Mono',monospace;">
+                Grafik yükleniyor…
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer-note">
+            <strong>Hisse:</strong> sembol · <strong>Değişim:</strong> dönem başına % · <strong>Hacim:</strong> işlem hacmi (kutu boyutu) · <strong>Fiyat:</strong> kapanış ($). Veriler Yahoo Finance üzerinden alınmaktadır.
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var container = document.getElementById('graph-container');
+            if (!container) return;
+            var plotlyRoot = container.querySelector('.plot-container');
+            if (plotlyRoot) {
+                var traces = plotlyRoot.querySelectorAll('.trace');
+                var countEl = document.getElementById('info-count');
+                if (countEl && traces.length) countEl.textContent = traces.length;
+            }
+            var periodEl = document.getElementById('info-period');
+            if (periodEl) {
+                var match = window.location.search.match(/period=([^&]+)/);
+                if (match) periodEl.textContent = match[1];
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -2,16 +2,116 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Grafik Analiz Portalı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafik Analiz Portalı | Dark Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .form-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; }
-        h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #7f8c8d; font-size: 14px; }
-        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        input[type="submit"] { width: 100%; background-color: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        input[type="submit"]:hover { background-color: #2980b9; }
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --input-bg: #334155;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 380px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--text-main);
+            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .input-group { margin-bottom: 20px; position: relative; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            box-sizing: border-box;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+            background-color: #3d4b5f;
+        }
+
+        select[name="dil"] {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2338bdf8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        input[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+            background: linear-gradient(135deg, #7dd3fc 0%, #3b82f6 100%);
+        }
+
+        option {
+            background-color: #1e293b;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -21,34 +121,86 @@
     <form action="{{ url_for('grafik_penceresi') }}" method="post">
 
         <div class="input-group">
-            <label>Hisse Sembolü (Örn: BTC-USD, AAPL, THYAO.IS)</label>
-            <input type="text" name="hisse" placeholder="Sembol girin..." required/>
+            <label>Hisse Sembolü</label>
+            <input type="text" name="hisse" value="{{ saved_s if saved_s else '' }}" placeholder="Örn: BTC-USD veya THYAO.IS" required/>
         </div>
 
         <div class="input-group">
-            <label>Geçmiş Veri Süresi (Period)</label>
+            <label>Yapay Zeka Analiz Dili</label>
+            <select name="dil" required size="1" onfocus="this.size=6;" onblur="this.size=1;" onchange="this.size=1; this.blur();">
+                <option value="Turkish" {% if saved_d == 'Turkish' %} selected {% endif %}>Türkçe 🇹🇷</option>
+                <option value="English" {% if saved_d == 'English' %} selected {% endif %}>English 🇺🇸</option>
+                <option value="German" {% if saved_d == 'German' %} selected {% endif %}>Deutsch 🇩🇪</option>
+                <option value="French" {% if saved_d == 'French' %} selected {% endif %}>Français 🇫🇷</option>
+                <option value="Spanish" {% if saved_d == 'Spanish' %} selected {% endif %}>Español 🇪🇸</option>
+                <option value="Italiano" {% if saved_d == 'Italiano' %} selected {% endif %}>Italian 🇮🇹</option>
+                <option value="Russian" {% if saved_d == 'Russian' %} selected {% endif %}>Pусский 🇷🇺</option>
+                <option value="Chinese" {% if saved_d == 'Chinese' %} selected {% endif %}>中文 🇨🇳</option>
+                <option value="Japanese" {% if saved_d == 'Japanese' %} selected {% endif %}>日本語 🇯🇵</option>
+                <option value="Korean" {% if saved_d == 'Korean' %} selected {% endif %}>한국어 🇰🇷</option>
+                <option value="Arabic" {% if saved_d == 'Arabic' %} selected {% endif %}>العربية 🇸🇦</option>
+                <option value="Portuguese" {% if saved_d == 'Portuguese' %} selected {% endif %}>Português 🇵🇹</option>
+                <option value="Dutch" {% if saved_d == 'Dutch' %} selected {% endif %}>Nederlands 🇳🇱</option>
+                <option value="Hindi" {% if saved_d == 'Hindi' %} selected {% endif %}>हिन्दी 🇮🇳</option>
+                <option value="Azerbaijani" {% if saved_d == 'Azerbaijani' %} selected {% endif %}>Azərbaycanca 🇦🇿</option>
+                <option value="Greek" {% if saved_d == 'Greek' %} selected {% endif %}>Ελληνικά 🇬🇷</option>
+                <option value="Hebrew" {% if saved_d == 'Hebrew' %} selected {% endif %}>עברית 🇮🇱</option>
+                <option value="Swedish" {% if saved_d == 'Swedish' %} selected {% endif %}>Svenska 🇸🇪</option>
+                <option value="Norwegian" {% if saved_d == 'Norwegian' %} selected {% endif %}>Norsk 🇳🇴</option>
+                <option value="Danish" {% if saved_d == 'Danish' %} selected {% endif %}>Dansk 🇩🇰</option>
+                <option value="Finnish" {% if saved_d == 'Finnish' %} selected {% endif %}>Suomi 🇫🇮</option>
+                <option value="Polish" {% if saved_d == 'Polish' %} selected {% endif %}>Polski 🇵🇱</option>
+                <option value="Czech" {% if saved_d == 'Czech' %} selected {% endif %}>Čeština 🇨🇿</option>
+                <option value="Hungarian" {% if saved_d == 'Hungarian' %} selected {% endif %}>Magyar 🇭🇺</option>
+                <option value="Romanian" {% if saved_d == 'Romanian' %} selected {% endif %}>Română 🇷🇴</option>
+                <option value="Thai" {% if saved_d == 'Thai' %} selected {% endif %}>ไทย 🇹🇭</option>
+                <option value="Indonesian" {% if saved_d == 'Indonesian' %} selected {% endif %}>Bahasa Indonesia 🇮🇩</option>
+                <option value="Vietnamese" {% if saved_d == 'Vietnamese' %} selected {% endif %}>Tiếng Việt 🇻🇳</option>
+                <option value="Persian" {% if saved_d == 'Persian' %} selected {% endif %}>فارsi 🇮🇷</option>
+                <option value="Ukrainian" {% if saved_d == 'Ukrainian' %} selected {% endif %}>Українська 🇺🇦</option>
+                <option value="Bulgarian" {% if saved_d == 'Bulgarian' %} selected {% endif %}>Български 🇧🇬</option>
+                <option value="Serbian" {% if saved_d == 'Serbian' %} selected {% endif %}>Српски 🇷🇸</option>
+                <option value="Croatian" {% if saved_d == 'Croatian' %} selected {% endif %}>Hrvatski 🇭🇷</option>
+                <option value="Slovak" {% if saved_d == 'Slovak' %} selected {% endif %}>Slovenčina 🇸🇰</option>
+                <option value="Malay" {% if saved_d == 'Malay' %} selected {% endif %}>Bahasa Melayu 🇲🇾</option>
+                <option value="Filipino" {% if saved_d == 'Filipino' %} selected {% endif %}>Filipino 🇵🇭</option>
+                <option value="Bengali" {% if saved_d == 'Bengali' %} selected {% endif %}>বাংলা 🇧🇩</option>
+                <option value="Urdu" {% if saved_d == 'Urdu' %} selected {% endif %}>اردو 🇵🇰</option>
+                <option value="Kazakh" {% if saved_d == 'Kazakh' %} selected {% endif %}>Қазақ тілі 🇰🇿</option>
+                <option value="Uzbek" {% if saved_d == 'Uzbek' %} selected {% endif %}>O'zbek tili 🇺🇿</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Geçmiş Veri Süresi</label>
             <select name="period">
-                <option value="1d">1 Gün</option>
-                <option value="5d">5 Gün</option>
-                <option value="1mo" selected>1 Ay</option>
-                <option value="3mo">3 Ay</option>
-                <option value="1y">1 Yıl</option>
-                <option value="max">Tümü</option>
+                <option value="1d" {% if saved_p == '1d' %} selected {% endif %}>1 Gün</option>
+                <option value="5d" {% if saved_p == '5d' %} selected {% endif %}>5 Gün</option>
+                <option value="1mo" {% if saved_p == '1mo' %} selected {% endif %}>1 Ay</option>
+                <option value="3mo" {% if saved_p == '3mo' %} selected {% endif %}>3 Ay</option>
+                <option value="6mo" {% if saved_p == '6mo' %} selected {% endif %}>6 Ay</option>
+                <option value="1y" {% if saved_p == '1y' %} selected {% endif %}>1 Yıl</option>
+                <option value="2y" {% if saved_p == '2y' %} selected {% endif %}>2 Yıl</option>
+                <option value="3y" {% if saved_p == '3y' %} selected {% endif %}>3 Yıl</option>
+                <option value="4y" {% if saved_p == '4y' %} selected {% endif %}>4 Yıl</option>
+                <option value="5y" {% if saved_p == '5y' %} selected {% endif %}>5 Yıl</option>
+                <option value="max" {% if saved_p == 'max' %} selected {% endif %}>Tümü</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>Mum Aralığı (Interval)</label>
+            <label>Mum Aralığı</label>
             <select name="interval">
-                <option value="1m">1 Dakika</option>
-                <option value="15m">15 Dakika</option>
-                <option value="1h">1 Saat</option>
-                <option value="1d" selected>1 Gün</option>
-                <option value="1wk">1 Hafta</option>
+                <option value="1m" {% if saved_i == '1m' %} selected {% endif %}>1 Dakika</option>
+                <option value="5m" {% if saved_i == '5m' %} selected {% endif %}>5 Dakika</option>
+                <option value="15m" {% if saved_i == '15m' %} selected {% endif %}>15 Dakika</option>
+                <option value="1h" {% if saved_i == '1h' %} selected {% endif %}>1 Saat</option>
+                <option value="1d" {% if saved_i == '1d' %} selected {% endif %}>1 Gün</option>
+                <option value="1wk" {% if saved_i == '1wk' %} selected {% endif %}>1 Hafta</option>
             </select>
         </div>
 
-        <input type="submit" value="Grafiği Oluştur"/>
+        <input type="submit" value="Analizi Başlat"/>
     </form>
 </div>
 

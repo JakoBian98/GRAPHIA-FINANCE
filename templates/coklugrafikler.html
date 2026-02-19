@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚔️ Hisse Düellosu Giriş</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -25,8 +26,8 @@
             border: 1px solid #e2e8f0;
         }
         h2 { color: #1e293b; margin-bottom: 30px; font-weight: 800; font-size: 26px; }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
+        .input-group { margin-bottom: 20px; text-align: left; position: relative; }
+        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         input, select {
             width: 100%;
             padding: 14px;
@@ -38,8 +39,19 @@
             color: #1e293b;
             outline: none;
             transition: 0.2s;
+            cursor: pointer;
         }
         input:focus, select:focus { border-color: #4f46e5; background: #f8faff; }
+
+        /* Dil Seçeneği Özel Stili */
+        .language-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4f46e5;
+            margin-bottom: 8px;
+        }
+
         .vs {
             font-weight: 900;
             color: #4f46e5;
@@ -87,25 +99,57 @@
             <input type="text" name="hisse2" placeholder="İkinci sembolü girin" required>
         </div>
 
+        <div class="input-group">
+            <label><i class="fas fa-robot"></i> YAPAY ZEKA ANALİZ DİLİ</label>
+            <select name="Dil" required size="1" onfocus="this.size=5;" onblur="this.size=1;" onchange="this.size=1; this.blur();">
+                <option value="Turkish" selected>Türkçe 🇹🇷</option>
+                <option value="English">English 🇺🇸</option>
+                <option value="German">Deutsch 🇩🇪</option>
+                <option value="French">Français 🇫🇷</option>
+                <option value="Spanish">Español 🇪🇸</option>
+                <option value="Italian">Italiano 🇮🇹</option>
+                <option value="Russian">Pусский 🇷🇺</option>
+                <option value="Chinese">中文 🇨🇳</option>
+                <option value="Japanese">日本語 🇯🇵</option>
+                <option value="Korean">한국어 🇰🇷</option>
+                <option value="Arabic">العربية 🇸🇦</option>
+                <option value="Portuguese">Português 🇵🇹</option>
+                <option value="Dutch">Nederlands 🇳🇱</option>
+                <option value="Azerbaijani">Azərbaycanca 🇦🇿</option>
+                <option value="Greek">Ελληνικά 🇬🇷</option>
+                <option value="Hebrew">עברית 🇮🇱</option>
+                <option value="Swedish">Svenska 🇸🇪</option>
+                <option value="Finnish">Suomi 🇫🇮</option>
+                <option value="Polish">Polski 🇵🇱</option>
+                <option value="Hindi">हिन्दी 🇮🇳</option>
+                <option value="Thai">ไทย 🇹🇭</option>
+                <option value="Indonesian">Bahasa Indonesia 🇮🇩</option>
+                <option value="Vietnamese">Tiếng Việt 🇻🇳</option>
+                <option value="Ukrainian">Українська 🇺🇦</option>
+                <option value="Bulgarian">Български 🇧🇬</option>
+                <option value="Hungarian">Magyar 🇭🇺</option>
+                <option value="Czech">Čeština 🇨🇿</option>
+                <option value="Romanian">Română 🇷🇴</option>
+                <option value="Kazakh">Қазақ тілі 🇰🇿</option>
+                <option value="Uzbek">O'zbek tili 🇺🇿</option>
+            </select>
+        </div>
+
         <div class="input-group" style="display: flex; gap: 12px;">
             <div style="flex: 1.2;">
                 <label>Zaman Aralığı</label>
                 <select name="period">
                     <option value="1mo">1 Ay</option>
                     <option value="6mo">6 Ay</option>
-                    <option value="1y">1 Yıl</option>
-                    <option value="2y">2 Yıl</option>
-                    <option value="3y">3 Yıl</option>
-                    <option value="4y">4 Yıl</option>
+                    <option value="1y" selected>1 Yıl</option>
                     <option value="5y">5 Yıl</option>
-                    <option value="7y">7 Yıl</option>
-                    <option value="max">Maksimum (Tüm Veri)</option>
+                    <option value="max">Maksimum</option>
                 </select>
             </div>
             <div style="flex: 1;">
                 <label>Mum Barı</label>
                 <select name="interval">
-                    <option value="1d">1 Gün</option>
+                    <option value="1d" selected>1 Gün</option>
                     <option value="1wk">1 Hafta</option>
                     <option value="1mo">1 Ay</option>
                     <option value="1h">1 Saat</option>

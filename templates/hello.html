@@ -2,148 +2,359 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Finans Analiz Platformu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphia | Finansal Analiz Platformu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --accent: #2dd4bf;
+            --text: #f8fafc;
+            --dim: #94a3b8;
+            --up: #00ffbb;
+            --down: #ff4b5c;
+            --border: #334155;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
+            background: var(--bg);
             margin: 0;
-            padding: 20px;
-            text-align: center;
+            padding: 0;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        h1 {
-            color: #1a237e;
-            margin-bottom: 30px;
-            /* Mobilde 22px, PC'de 32px olacak şekilde otomatik ölçeklenir */
-            font-size: clamp(22px, 5vw, 32px);
-            font-weight: 800;
-        }
-
-        .menu-grid {
-            display: grid;
-            /* Ekran genişliğine göre kartları otomatik yan yana dizer veya alta atar */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-decoration: none;
-            color: #333;
-            border: 1px solid #edf2f7;
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Padding değerlerinin kartı ekrandan taşırmasını engeller */
-            box-sizing: border-box;
         }
 
-        /* Hover efekti sadece fare kullanılan cihazlarda (PC) çalışır */
-        @media (hover: hover) {
-            .card:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-                border-color: #3949ab;
-            }
+        /* --- CANLI BORSA BANDI (TICKER) - YENİLENMİŞ --- */
+        .ticker-wrapper {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
-        .icon {
-            font-size: 40px;
-            margin-bottom: 10px;
+        .ticker-container {
+            display: flex;
+            width: max-content;
+            white-space: nowrap;
+            padding: 12px 0;
+            animation: scroll 40s linear infinite;
         }
 
-        .card h3 {
-            margin: 10px 0;
-            color: #1a237e;
-            font-size: 19px;
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 25px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--text);
+            border-right: 1px solid var(--border);
         }
 
-        .card p {
+        .ticker-item b { color: var(--dim); margin-right: 8px; }
+        .ticker-item .price { font-weight: 700; margin-right: 8px; }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-wrapper:hover .ticker-container {
+            animation-play-state: paused;
+        }
+
+        /* --- SAAT STİLİ (SOL ÜST KÖŞE) --- */
+        .terminal-clock-container {
+            position: fixed;
+            top: 55px; /* Ticker bandının hemen altı */
+            left: 20px;
+            z-index: 999;
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 14px;
-            color: #718096;
-            line-height: 1.4;
-            margin: 0;
+            color: var(--accent);
+            background: rgba(15, 23, 42, 0.7);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .usd-card {
-            background: linear-gradient(to bottom right, #ffffff, #f1fdf4);
-            border-bottom: 4px solid #2e7d32;
+        .terminal-clock-container i {
+            font-size: 13px;
+            animation: pulse-clock 2s infinite;
         }
 
-        /* Çok küçük ekranlı telefonlar için özel ayar */
-        @media (max-width: 400px) {
-            body { padding: 15px; }
-            .menu-grid {
-                grid-template-columns: 1fr; /* Kartları tam genişlik yap */
-                gap: 15px;
-            }
-            .card { padding: 20px 15px; }
+        @keyframes pulse-clock {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
         }
+
+        /* --- ANA İÇERİK KONUMLANDIRMA --- */
+        .main-wrapper {
+            padding-top: 100px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .header-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* --- LOGO TASARIMI --- */
+        .graphia-bull-logo {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            background: var(--panel);
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        .chart-ui { display: flex; align-items: flex-end; gap: 4px; height: 35px; margin-top: 15px; }
+        .candle { width: 7px; border-radius: 1px; position: relative; background: var(--accent); }
+        .c1 { height: 12px; opacity: 0.4; }
+        .c2 { height: 20px; opacity: 0.7; }
+        .c3 { height: 28px; opacity: 0.9; }
+        .c4 { height: 38px; background: var(--accent); box-shadow: 0 0 15px rgba(45, 212, 191, 0.4); }
+
+        .bull-arrow { position: absolute; bottom: 25px; left: 15px; width: 55px; height: 45px; z-index: 2; }
+        .arrow-path { stroke: var(--accent); stroke-width: 4; fill: none; stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawPath 2s ease-out infinite; }
+        .arrow-head { fill: var(--accent); animation: fadeInArrow 2s infinite; }
+
+        @keyframes drawPath { 70% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes fadeInArrow { 0%, 50% { opacity: 0; } 75% { opacity: 1; } 100% { opacity: 0; } }
+
+        h1 { color: var(--text); margin: 0; font-size: clamp(36px, 6vw, 60px); font-weight: 900; letter-spacing: 3px; }
+        h1 span { color: var(--accent); text-shadow: 0 0 25px rgba(45, 212, 191, 0.4); }
+        .subtitle { color: var(--dim); font-size: 13px; letter-spacing: 5px; margin-top: 15px; font-weight: 700; border-top: 1px solid var(--border); padding-top: 12px; }
+
+        /* GRID VE KARTLAR */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 90%;
+            max-width: 1300px;
+            padding-bottom: 50px;
+        }
+
+        .card {
+            background: var(--panel);
+            padding: 30px 20px;
+            border-radius: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: var(--text);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            background: #1e294b;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(45, 212, 191, 0.1);
+        }
+
+        .icon { font-size: 45px; margin-bottom: 15px; }
+        .card h3 { margin: 10px 0; color: var(--accent); font-size: 20px; }
+        .card p { font-size: 14px; color: var(--dim); line-height: 1.5; }
+
+        .bist-card { border-bottom: 4px solid var(--down); }
+        .crypto-card { border-bottom: 4px solid #f7931a; }
+        .usd-card { border-bottom: 4px solid #22c55e; }
+
+        @media (max-width: 600px) { .logo-row { flex-direction: column; } .terminal-clock-container { left: 50%; transform: translateX(-50%); width: max-content; } }
     </style>
 </head>
 <body>
 
-<div class="menu-grid">
-        <a href="/Finans" class="card">
-            <span class="icon">🔍</span>
-            <h3>Parametre Bilgi</h3>
-            <p>Anlık fiyat, yüksek/düşük ve hacim verilerini listeleyin.</p>
-        </a>
-
-        <a href="/Hacim_Ekranı" class="card">
-            <span class="icon">📈</span>
-            <h3>Hacim Analizi</h3>
-            <p>Hacim sapmaları, Z-Skor ve VWAP verilerini takip edin.</p>
-        </a>
-
-        <a href="/Grafikler" class="card">
-            <span class="icon">🖼️</span>
-            <h3>Teknik Grafik</h3>
-            <p>Fiyat hareketlerini ve trendleri görsel olarak inceleyin.</p>
-        </a>
-
-        <a href="/Coklu_Grafik_Giris" class="card">
-            <span class="icon">⚔️</span>
-            <h3>Hisse Düellosu</h3>
-            <p>İki hisseyi yüzde bazlı karşılaştırın ve korelasyonu görün.</p>
-        </a>
-
-        <a href="/USD_HACİM" class="card usd-card">
-            <span class="icon">💰</span>
-            <h3>Dolar Bazlı Hacim</h3>
-            <p>Gerçek para girişini dolar bazlı derinlikle analiz edin.</p>
-        </a>
-
-        <form id="usdForm" action="/Dolar_Bazlı_Grafik" method="POST" style="display: none;"></form>
-        <a href="javascript:void(0);" onclick="document.getElementById('usdForm').submit();" class="card usd-card">
-            <span class="icon">💵</span>
-            <h3>Döviz Bazlı Analiz</h3>
-            <p>Hisselerin gerçek değerini enflasyondan arındırılmış görün.</p>
-        </a>
-
-        <a href="/Coinler_Paneli" class="card" style="border-bottom: 4px solid #f7931a; background: linear-gradient(to bottom right, #ffffff, #fffdf1);">
-            <span class="icon">₿</span>
-            <h3>Kripto Canlı Masa</h3>
-            <p>En popüler kripto paraları anlık fiyat ve değişimle takip edin.</p>
-        </a>
+    <div class="ticker-wrapper">
+        <div class="ticker-container">
+            {% for item in ticker_data %}
+            <div class="ticker-item">
+                <b>{{ item.isim }}</b>
+                <span class="price">{{ item.fiyat }}</span>
+                <span style="color: {{ item.renk }}">
+                    {% if item.degisim >= 0 %}+{% endif %}{{ item.degisim }}%
+                </span>
+            </div>
+            {% endfor %}
+            {% for item in ticker_data %}
+            <div class="ticker-item">
+                <b>{{ item.isim }}</b>
+                <span class="price">{{ item.fiyat }}</span>
+                <span style="color: {{ item.renk }}">
+                    {% if item.degisim >= 0 %}+{% endif %}{{ item.degisim }}%
+                </span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+
+    <div class="terminal-clock-container">
+        <i class="fas fa-clock"></i>
+        <span id="terminal-clock">Yükleniyor...</span>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="header-container">
+            <div class="logo-row">
+                <div class="graphia-bull-logo">
+                    <div class="chart-ui">
+                        <div class="candle c1"></div>
+                        <div class="candle c2"></div>
+                        <div class="candle c3"></div>
+                        <div class="candle c4"></div>
+                    </div>
+                    <svg class="bull-arrow" viewBox="0 0 60 50">
+                        <path class="arrow-path" d="M5 40 Q 25 35, 35 15 L 45 5" />
+                        <polygon class="arrow-head" points="45,5 35,5 45,15" />
+                    </svg>
+                </div>
+                <h1>GRAP<span>HİA</span></h1>
+            </div>
+            <div class="subtitle">Quantitative AI Financial Terminal</div>
+        </div>
+
+        <div class="menu-grid">
+            <a href="/Borsa_Paneli" class="card bist-card">
+                <span class="icon">📈</span>
+                <h3>Borsa İstanbul</h3>
+                <p>90+ Hisse senedini anlık fiyat, açılış ve günlük değişimle takip edin.</p>
+            </a>
+            <a href="/Coinler_Paneli" class="card crypto-card">
+                <span class="icon">₿</span>
+                <h3>Kripto Masa</h3>
+                <p>Kripto paraları anlık fiyat ve % değişim verileriyle izleyin.</p>
+            </a>
+            <a href="/Finans" class="card">
+                <span class="icon">🔍</span>
+                <h3>Parametre Bilgi</h3>
+                <p>Anlık fiyat, yüksek/düşük ve hacim verilerini listeleyin.</p>
+            </a>
+            <a href="/Hacim_Ekranı" class="card">
+                <span class="icon">📊</span>
+                <h3>Hacim Analizi</h3>
+                <p>Hacim sapmaları ve VWAP verilerini takip edin.</p>
+            </a>
+            <a href="/Grafikler" class="card">
+                <span class="icon">📈</span>
+                <h3>Teknik Grafik</h3>
+                <p>Fiyat hareketlerini görsel olarak inceleyin.</p>
+            </a>
+            <a href="/Coklu_Grafik_Giris" class="card">
+                <span class="icon">⚔️</span>
+                <h3>Hisse Düellosu</h3>
+                <p>İki hisseyi yüzde bazlı karşılaştırın.</p>
+            </a>
+            <a href="/USD_HACİM" class="card usd-card">
+                <span class="icon">💰</span>
+                <h3>Dolar Bazlı Hacim</h3>
+                <p>Gerçek para girişini dolar derinliğiyle analiz edin.</p>
+            </a>
+            <a href="/Dolar_Bazlı_Grafik" class="card usd-card">
+                <span class="icon">💵</span>
+                <h3>Döviz Bazlı Analiz</h3>
+                <p>Hisselerin gerçek değerini enflasyondan arındırılmış görün.</p>
+            </a>
+            <a href="/Kar_Zarar_Giriş" class="card" style="border-bottom: 4px solid #a855f7;">
+                <span class="icon">🧮</span>
+                <h3>Kar-Zarar Simülatörü</h3>
+                <p>Maliyetinizi ve miktarınızı girin, temettü dahil gerçek net kazancınızı yapay zeka ile hesaplayın.</p>
+            </a>
+            <a href="/Isı_Grafiği_Giriş" class="card" style="border-bottom: 4px solid var(--accent);">
+                <span class="icon">🗺️</span>
+                <h3>NASDAQ Isı Haritası</h3>
+                <p>200 Dev hisseyi hacim büyüklükleri ve anlık değişim renkleriyle tek karede izleyin.</p>
+            </a>
+            <a href="/Kripto_Isı_Haritası" class="card crypto-card" style="border-bottom: 4px solid #f7931a;">
+                <span class="icon">🕸️</span>
+                <h3>Binance Isı Haritası</h3>
+                <p>En yüksek hacimli 300 kripto parayı anlık piyasa hakimiyeti ve değişim renkleriyle analiz edin.</p>
+            </a>
+            <a href="/Set_Alarm_Giriş" class="card crypto-card" style="border-bottom: 4px solid #f7931a;">
+                <span class="icon">🕸️</span>
+                <h3>Email Uyarısı</h3>
+                <p>İstediğiniz varlığın istediğiniz fiyata geldiği an haberdar olun</p>
+            </a>
+            <a href="/Finans_Haberleri" class="card" style="border-bottom: 4px solid #facc15;">
+                <span class="icon">📡</span>
+                <h3>Piyasa Haberleri</h3>
+                <p>Global piyasalardan en son 30 haberi anlık terminal akışıyla takip edin.</p>
+            </a>
+        </div>
+
+        <footer style="text-align: center; color: #475569; font-size: 11px; margin-bottom: 30px; font-weight: 500;">
+            <p>© 2026 GRAPHIA BU PROJE EĞİTİM AMAÇLIDIR YFİNANCE VE PYTHON-BİNANCE TEMELLİDİR |, YATIRIM TAVSİYESİ DEĞİLDİR.</p>
+        </footer>
+    </div>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+
+        // Tarih: 14.02.2026
+        const date = now.toLocaleDateString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        // Saat: 23:59:59
+        const time = now.toLocaleTimeString('tr-TR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+
+        // HTML elementini ID ile bul ve içeriği güncelle
+        const clockEl = document.getElementById('terminal-clock');
+        if (clockEl) {
+            clockEl.innerText = `${date} ${time}`;
+        }
+    }
+
+    // Her saniye (1000ms) güncelle
+    setInterval(updateClock, 1000);
+    // İlk açılışta beklemeden çalıştır
+    updateClock();
+</script>
 
 </body>
 </html>

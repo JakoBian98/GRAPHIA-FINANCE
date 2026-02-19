@@ -5,247 +5,438 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TERMINAL | {{ hisse }} ANALİZ</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #020617;
-            --panel-color: #0f172a;
-            --accent-color: #00ffbb;
-            --text-color: #f8fafc;
-            --border-color: #1e293b;
-            --danger: #ff4b5c;
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <style>
+    :root {
+        --bg: #020617; --panel: #0f172a; --accent: #00ffbb;
+        --accent-soft: rgba(0, 255, 187, 0.1); --text: #f8fafc;
+        --dim: #94a3b8; --border: #1e293b; --danger: #ff4b5c; --blue: #3b82f6;
+    }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Fira Code', monospace;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
+    body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
+    .terminal-container { max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
 
-        .header-panel {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            background: var(--panel-color);
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+    /* Üst Bilgi Satırı */
+    .terminal-info { font-family: 'Fira Code'; font-size: 0.75rem; color: var(--dim); display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .pulse { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-right: 8px; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .stat-box { border-left: 2px solid var(--accent-color); padding-left: 15px; }
-        .stat-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; }
-        .stat-value { font-size: 1.4rem; font-weight: 500; margin-top: 5px; }
-        .price-up { color: var(--accent-color); }
-        .price-down { color: var(--danger); }
+    /* İstatistik Paneli */
+    .header-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: var(--panel); padding: 15px; border: 1px solid var(--border); border-radius: 8px; }
+    .stat-box { border-left: 2px solid var(--accent); padding-left: 12px; }
+    .stat-label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 1.1rem; font-weight: 700; margin-top: 4px; font-family: 'Fira Code'; }
 
-        .view-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .view-btn {
-            background: var(--panel-color);
-            color: #64748b;
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.75rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: 0.3s;
-        }
+    /* KONTROL MERKEZİ */
+    .control-hub { display: flex; flex-direction: column; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; position: relative; }
 
-        .view-btn.active {
-            background: var(--accent-color);
-            color: var(--bg-color);
-            border-color: var(--accent-color);
-            box-shadow: 0 0 15px rgba(0, 255, 187, 0.3);
-        }
+    /* Grafik Seçenekleri Satırı */
+    .hub-row { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .btn-group { display: flex; background: var(--bg); padding: 4px; border-radius: 6px; border: 1px solid var(--border); }
 
-        #chart-main-container {
-            flex-grow: 1;
-            background: var(--panel-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            position: relative;
-        }
+    .hub-btn { background: transparent; color: var(--dim); border: none; padding: 8px 14px; font-family: 'Fira Code'; font-size: 0.7rem; cursor: pointer; border-radius: 4px; transition: 0.2s; font-weight: 600; }
+    .hub-btn.active { background: var(--accent); color: var(--bg); }
+    .hub-btn:hover:not(.active) { color: var(--accent); background: var(--accent-soft); }
 
-        .chart-div {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            visibility: hidden; /* Hepsi başlangıçta gizli */
-        }
 
-        .terminal-info {
-            font-size: 0.8rem;
-            color: #475569;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-        }
 
-        .pulse {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: blink 1.5s infinite;
-        }
+    /* YENİLENMİŞ DİKEY İNDİKATÖR PANELİ (DROPDOWN) */
+    .indicator-dropdown {
+    display: none;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    position: absolute;
+    top: 55px;
+    left: 10px;
+    z-index: 1000;
+    width: 280px;         /* Biraz daha genişlettik */
+    max-height: 500px;    /* 220'den 500'e çıkardık, artık her şey sığar! */
+    overflow-y: auto;     /* İçerik taşarsa kaydırma çubuğu çıksın */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    </style>
+    /* Scrollbar Tasarımı (Firefox) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg);
+}
+
+/* Scrollbar Tasarımı (Chrome, Edge, Safari) */
+.indicator-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.indicator-dropdown::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-radius: 8px;
+}
+
+.indicator-dropdown::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 8px;
+    border: 1px solid var(--panel);
+}
+
+.indicator-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #00cc99; /* Hover etkisi */
+}
+
+    /* Kaydırma çubuğu tasarımı */
+    .indicator-dropdown::-webkit-scrollbar { width: 5px; }
+    .indicator-dropdown::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+    .ind-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--dim);
+        font-size: 0.8rem;
+    }
+
+    .terminal-clock-container {
+    position: absolute;
+    top: 55px; /* Ticker bandının hemen altı */
+    left: 20px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    background: rgba(15, 23, 42, 0.6);
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.terminal-clock-container i {
+    font-size: 12px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+    .ind-row:last-child { border-bottom: none; }
+    .ind-row:hover { background: var(--accent-soft); color: var(--accent); }
+    .ind-row.active { color: var(--accent); font-weight: bold; }
+    .ind-row i { font-size: 0.7rem; }
+
+    /* Grafik Alanı */
+    #chart-viewport { height: 800px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; }
+    .chart-layer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; visibility: hidden; }
+
+    /* AI & Notlar */
+    .ai-section { background: linear-gradient(to right, #0f172a, #1e1b4b); border: 1px solid var(--blue); border-radius: 8px; padding: 20px; margin-top: 10px; }
+    .ai-content { font-size: 0.95rem; line-height: 1.6; color: #cbd5e1; white-space: pre-wrap; }
+
+    .footer-btn { background: var(--accent); color: var(--bg); text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 700; display: block; margin: 15px 0; }
+</style>
 </head>
 <body>
 
+<div class="terminal-container">
     <div class="terminal-info">
-        <span><span class="pulse"></span> SYSTEM_STATUS: ONLINE // CORE_V3</span>
-        <span>SERVER_CLOCK: <span id="clock">00:00:00</span></span>
+        <span><span class="pulse"></span> TERMINAL_V3 // ACTIVE_SESSION: {{ hisse }} // IND_LOADED</span>
+        <span id="clock">00:00:00</span>
     </div>
 
     <div class="header-panel">
+        <div class="stat-box"><div class="stat-label">SYMBOL</div><div class="stat-value" style="color: var(--accent)">$ {{ hisse }}</div></div>
+        <div class="stat-box"><div class="stat-label">LAST_PRICE</div><div class="stat-value">{{ "{:,.2f}".format(fiyat_son) }}</div></div>
         <div class="stat-box">
-            <div class="stat-label">long_name</div>
-            <div class="stat-value" style="color: var(--accent-color)">$ {{ hisse }}</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">LAST PRICE</div>
-            <div class="stat-value">{{ fiyat_son }}</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">24H CHANGE</div>
-            <div class="stat-value {% if fiyat_degisim >= 0 %}price-up{% else %}price-down{% endif %}">
+            <div class="stat-label">CHANGE</div>
+            <div class="stat-value" style="color: {% if fiyat_degisim >= 0 %}var(--accent){% else %}var(--danger){% endif %}">
                 {% if fiyat_degisim >= 0 %}+{% endif %}{{ fiyat_degisim }}%
             </div>
         </div>
-        <div class="stat-box">
-            <div class="stat-label">ATH_LEVEL</div>
-            <div class="stat-value" style="font-size: 1.1rem;">{{ ath }}</div>
+        <div class="stat-box"><div class="stat-label">ATH_LEVEL</div><div class="stat-value">{{ ath }}</div></div>
+        <div class="stat-box"><div class="stat-label">ATH_GAP</div><div class="stat-value" style="color: var(--danger)">%{{ "%.2f"|format(zirveden_uzaklık) }}</div></div>
+    </div>
+
+    <div class="control-hub">
+        <div class="hub-row">
+            <div class="btn-group">
+                <button id="btnLine" class="hub-btn active" onclick="switchMainView('line')">LINE (NOT AREA)</button>
+                <button id="btnArea" class="hub-btn" onclick="switchMainView('area')">LINE (AREA)</button>
+                <button id="btnCandle" class="hub-btn" onclick="switchMainView('candle')">CANDLE</button>
+                <button id="btnHeikin" class="hub-btn" onclick="switchMainView('heikin')">HEIKIN_ASHI</button>
+                <button id="btnVolCandle" class="hub-btn" onclick="switchMainView('volCandle')">VOL_CANDLE</button>
+                <button id="btnBar" class="hub-btn" onclick="switchMainView('bar')">BAR</button>
+                <button id="btnHollowCandle" class="hub-btn" onclick="switchMainView('hollow')">HOLLOW CANDLE</button>
+            </div>
+
+            <button class="hub-btn" style="border: 1px solid var(--accent); color: var(--accent);" onclick="toggleIndPanel()">
+                <i class="fas fa-layer-group"></i> İNDİKATÖRLER <i class="fas fa-chevron-down" style="font-size: 0.6rem; margin-left: 5px;"></i>
+            </button>
+            <div class="ind-row" onclick="toggleChartLegend()" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 5px; color: #00ffbb;">
+    <span>Grafik Etiketlerini Gizle/Göster</span>
+    <i class="fas fa-eye legend-toggle-icon"></i>
+</div>
+
+            <button id="btnNote" class="hub-btn" style="border: 1px solid var(--blue); color: var(--blue);" onclick="toggleNoteMode()">
+                <i class="fas fa-pen"></i> NOT: <span id="noteStatus">OFF</span>
+            </button>
+        </div>
+
+        <div id="indPanel" class="indicator-dropdown">
+            <div class="ind-row" onclick="toggleInd('Bollinger', this)"><span>Bollinger Bantları</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Donchian', this)"><span>Donchian Kanalları</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Ichimoku', this)"><span>Ichimoku Bulutu (Kumo)</span><i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('EMA', this)"><span>EMA Ribbon</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('ALMA', this)"><span>ALMA (9)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('WMA', this)"><span>WMA (9)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Fractal', this)"><span>Williams Fractals</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Chaikin Osc', this)"><span>Chaikin Osc</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('RSI', this)"><span>RSI Göstergesi</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('CKS', this)"><span>Chande Kroll Stop</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Chande Momentum', this)"><span>Chande Osilatörü</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('SMI', this)"><span>Stokastik Momentum (SMI)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('PSAR', this)"><span>Parabolik SAR</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Chandelier', this)"><span>Chandelier Exit (Trend Takibi)</span><i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('KAMA', this)"><span>KAMA (Kaufman)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('SMA 50', this)"><span>SMA (50) - Mavi Çizgi</span><i class="fas fa-check"></i></div>
+
+    <div class="ind-row" onclick="toggleInd('SMA 200', this)">
+        <span>SMA (200) - Sarı Çizgi</span>
+        <i class="fas fa-check"></i>
+    </div>
+
+    <div class="ind-row" onclick="toggleInd('MA CROSS', this)">
+        <span style="color: var(--accent)">Kesişim Sinyalleri (▲/▼)</span>
+        <i class="fas fa-check"></i>
+    </div>
+            <div class="ind-row" onclick="toggleInd('KST', this)"><span>Know Sure Thing (KST)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('NVI', this)"><span>Negative Volume Index (NVI)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('RVI', this)"><span>Relative Vigor Index (RVI)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('PMO', this)"><span>Price Momentum Osc (PMO)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('LRC', this)"><span>Doğrusal Regresyon Eğrisi</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Special K', this)"><span>Pring's Special K</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Supertrend', this)"><span>Supertrend (Trend Takibi)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Ultimate Osc', this)"><span>Ultimate Oscillator (UO)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Knoxville Bull', this)"><span>Knoxville Bull</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Knoxville Bear', this)"><span>Knoxvill Bear </span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('TSI', this)"><span>TSI</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Ulcer Index', this)"><span>ULCER INDEX</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Volatilite', this)"><span>Tarihi Volatilite (HV)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('TRIX', this)"><span>TRIX (Triple EMA)</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('DPO', this)"><span>Trend Azaltma Osil. (DPO)</span><i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Zarf', this)"><span>Fiyat Zarfları (Envelope)</span><i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Coppock', this)"><span>Coppock Curve (Eğrisi)</span><i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Aroon', this)"><span>Aroon Göstergesi</span> <i class="fas fa-check"></i></div>
+            <div class="ind-row" onclick="toggleInd('Aroon Osc', this)"><span>Aroon Osilatörü</span> <i class="fas fa-check"></i></div>
         </div>
     </div>
 
-    <div class="view-selector">
-        <button id="btnLine" class="view-btn active" onclick="changeChart('line')">/ EXECUTE_LINE_VIEW</button>
-        <button id="btnCandle" class="view-btn" onclick="changeChart('candle')">/ EXECUTE_CANDLE_VIEW</button>
-        <button id="btnBar" class="view-btn" onclick="changeChart('bar')">/ EXECUTE_BAR_VIEW</button>
+    <div id="chart-viewport">
+        <div id="lineChart" class="chart-layer" style="visibility: visible;"></div>
+        <div id="areaChart" class="chart-layer"></div>
+        <div id="candleChart" class="chart-layer"></div>
+        <div id="heikinChart" class="chart-layer"></div>
+        <div id="volCandleChart" class="chart-layer"></div>
+        <div id="barChart" class="chart-layer"></div>
+        <div id="hollowChart" class="chart-layer"></div>
     </div>
 
-    <div id="chart-main-container">
-        <div id="lineChart" class="chart-div" style="visibility: visible;"></div>
-        <div id="candleChart" class="chart-div"></div>
-        <div id="barChart" class="chart-div"></div>
+    <div class="ai-section">
+        <div style="color: var(--accent); font-weight: 700; margin-bottom: 10px;"><i class="fas fa-robot"></i> QUANT_STRATEGY_OUTPUT:</div>
+        <div class="ai-content">{{ ai_analiz_notu | safe }}</div>
     </div>
 
-   <script>
-    const lineData = {{ line_json | safe }};
-    const candleData = {{ candle_json | safe }};
-    const barData = {{ bar_json | safe }};
+    <a href="/" class="footer-btn">NEW_CORE_QUERY</a>
+</div>
 
-    // --- ÇİZİM VE ARAÇ AYARLARI ---
+<script>
+    // Verileri güvenli bir şekilde alalım
+    const chartDataRaw = {
+        line: {{ line_json | safe if line_json else '{"data":[], "layout":{}}' }},
+        area: {{ area_json | safe if area_json else '{"data":[], "layout":{}}' }},
+        candle: {{ candle_json | safe if candle_json else '{"data":[], "layout":{}}' }},
+        hollow: {{ hollow_candle_json | safe if hollow_candle_json else '{"data":[], "layout":{}}' }},
+        heikin: {{ heikin_ashi_json | safe if heikin_ashi_json else '{"data":[], "layout":{}}' }},
+        bar: {{ bar_json | safe if bar_json else '{"data":[], "layout":{}}' }},
+        volCandle: {{ candle_volume_json | safe if candle_volume_json else '{"data":[], "layout":{}}' }}
+    };
+
+    const renderedCharts = new Set();
+    let isLegendOpen = true;
+
     const config = {
         responsive: true,
         displaylogo: false,
-        modeBarButtonsToAdd: [
-            'drawline',       // Trend çizgisi
-            'drawopenpath',   // Serbest çizim
-            'drawcircle',     // Daire
-            'drawrect',       // Dikdörtgen
-            'eraseshape'      // Silgi
-        ],
-        modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d']
+        modeBarButtonsToAdd: ['drawline', 'eraseshape'],
+        scrollZoom: true,
+        fastplot: true
     };
 
-    const drawingSettings = {
+    const layoutExt = {
         dragmode: 'pan',
-        newshape: {
-            line: { color: '#00ffbb', width: 2 },
-            fillcolor: 'rgba(0, 255, 187, 0.1)',
-            opacity: 1
-        }
+        uirevision: 'true',
+        newshape: { line: { color: '#00ffbb', width: 2 } },
+        margin: { t: 30, r: 30, b: 30, l: 50 }
     };
 
-    // --- GRAFİKLERİ OLUŞTUR ---
-    Plotly.newPlot('lineChart', lineData.data, { ...lineData.layout, ...drawingSettings }, config);
-    Plotly.newPlot('candleChart', candleData.data, { ...candleData.layout, ...drawingSettings }, config);
-    Plotly.newPlot('barChart', barData.data, { ...barData.layout, ...drawingSettings }, config);
+    function initApp() {
+        const defaultChart = 'candle';
+        renderSingleChart(defaultChart);
+        switchMainView(defaultChart);
+    }
 
-    // --- METİN EKLEME ÖZELLİĞİ (TIKLA-YAZ) ---
-    function enableTextAnnotation(chartId) {
-        const gd = document.getElementById(chartId);
+    function renderSingleChart(id) {
+        if (renderedCharts.has(id)) return;
 
-        gd.on('plotly_click', function(data) {
-            // Eğer o an silgi veya çizim modunda değilsek yazı yazdırsın
-            if (gd._fullLayout.dragmode === 'pan' || gd._fullLayout.dragmode === 'zoom') {
-                const note = prompt("Grafiğe notunuzu yazın:");
+        const targetDiv = document.getElementById(id + 'Chart');
+        if (targetDiv && chartDataRaw[id] && chartDataRaw[id].data.length > 0) {
 
-                if (note) {
-                    const newNote = {
-                        x: data.points[0].x,
-                        y: data.points[0].y,
-                        text: note,
-                        showarrow: true,
-                        arrowhead: 2,
-                        arrowcolor: '#00ffbb',
-                        font: { color: '#00ffbb', size: 12, family: 'Fira Code' },
-                        bgcolor: '#0f172a',
-                        bordercolor: '#1e293b',
-                        borderwidth: 1,
-                        padding: 5
-                    };
+            if (id === 'line' || id === 'area') {
+                chartDataRaw[id].data.forEach(trace => {
+                    trace.type = 'scattergl';
+                });
+            }
 
-                    const currentAnnotations = gd.layout.annotations || [];
-                    Plotly.relayout(chartId, {
-                        annotations: [...currentAnnotations, newNote]
-                    });
+            const finalLayout = {
+                ...chartDataRaw[id].layout,
+                ...layoutExt,
+                showlegend: isLegendOpen
+            };
+
+            Plotly.newPlot(id + 'Chart', chartDataRaw[id].data, finalLayout, config);
+            renderedCharts.add(id);
+            attachNoteListener(targetDiv);
+        }
+    }
+
+    function switchMainView(type) {
+        const viewType = type === 'hollow_candle' ? 'hollow' : type;
+
+        window.requestAnimationFrame(() => {
+            Object.keys(chartDataRaw).forEach(t => {
+                const chartDiv = document.getElementById(t + 'Chart');
+                let btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
+                if (t === 'hollow') btnId = 'btnHollowCandle';
+
+                const btn = document.getElementById(btnId);
+                const isActive = (t === viewType);
+
+                if (chartDiv) {
+                    if (isActive) {
+                        renderSingleChart(t);
+                        chartDiv.style.display = 'block';
+                        chartDiv.style.visibility = 'visible';
+                        Plotly.Plots.resize(chartDiv);
+                        Plotly.relayout(chartDiv, { 'showlegend': isLegendOpen, 'margin.t': 30, 'autosize': true });
+                    } else {
+                        chartDiv.style.display = 'none';
+                    }
                 }
+                if (btn) btn.classList.toggle('active', isActive);
+            });
+        });
+    }
+
+    function toggleChartLegend() {
+        isLegendOpen = !isLegendOpen;
+        const targets = ['lineChart', 'areaChart', 'candleChart', 'heikinChart', 'volCandleChart', 'barChart', 'hollowChart'];
+
+        targets.forEach(id => {
+            const gd = document.getElementById(id);
+            if (gd && renderedCharts.has(id.replace('Chart',''))) {
+                Plotly.relayout(id, { showlegend: isLegendOpen });
+            }
+        });
+
+        const icon = document.querySelector('.legend-toggle-icon');
+        const label = icon ? icon.previousElementSibling : null;
+
+        if (icon) {
+            icon.className = isLegendOpen ? "fas fa-eye" : "fas fa-eye-slash";
+        }
+        if (label && label.tagName === "SPAN") {
+            label.innerText = isLegendOpen ? "Etiketleri Gizle" : "Etiketleri Göster";
+        }
+    }
+
+    // --- ENTEGRE EDİLEN YENİ toggleInd FONKSİYONU ---
+    function toggleInd(indName, element) {
+    if (element) element.classList.toggle('active');
+
+    var isActive = (element && element.classList.contains('active'));
+    var update = { visible: isActive ? true : 'legendonly' };
+
+    const targets = ['candleChart', 'heikinChart', 'volCandleChart', 'hollowChart', 'lineChart', 'areaChart', 'barChart'];
+
+    // İsimleri karşılaştırırken daha esnek bir yöntem kullanıyoruz
+    const searchKey = indName.toLowerCase().trim();
+
+    targets.forEach(chartId => {
+        const gd = document.getElementById(chartId);
+        if (!gd || !gd.data) return;
+
+        var indices = [];
+        gd.data.forEach((trace, index) => {
+            const tName = (trace.name || "").toLowerCase();
+
+            // HV için özel kontrol ve genel arama
+            if (tName.includes(searchKey) ||
+                (searchKey === 'volatilite' && tName.includes('hv')) ||
+                (searchKey === 'bollinger' && tName.includes('bb')) ||
+                (searchKey === 'ichimoku' && (tName.includes('span') || tName.includes('chikou')))) {
+                indices.push(index);
+            }
+        });
+
+        if (indices.length > 0) {
+            Plotly.restyle(chartId, update, indices);
+        }
+    });
+}
+
+    function attachNoteListener(gd) {
+        gd.on('plotly_click', (d) => {
+            if (!noteActive) return;
+            const note = prompt("Analiz Notu Girin:");
+            if (note) {
+                const anno = {
+                    x: d.points[0].x, y: d.points[0].y, text: note,
+                    showarrow: true, arrowhead: 2, bgcolor: '#00ffbb',
+                    font: { color: '#000', size: 12 }
+                };
+                Plotly.relayout(gd, { 'annotations': [...(gd.layout.annotations || []), anno] });
             }
         });
     }
 
-    // Özelliği tüm grafiklere bağla
-    enableTextAnnotation('lineChart');
-    enableTextAnnotation('candleChart');
-    enableTextAnnotation('barChart');
+    document.addEventListener('DOMContentLoaded', initApp);
 
-    // --- GRAFİK DEĞİŞTİRME SİSTEMİ ---
-    function changeChart(type) {
-        const charts = {
-            'line': { div: 'lineChart', btn: 'btnLine' },
-            'candle': { div: 'candleChart', btn: 'btnCandle' },
-            'bar': { div: 'barChart', btn: 'btnBar' }
-        };
-
-        Object.values(charts).forEach(item => {
-            document.getElementById(item.div).style.visibility = 'hidden';
-            document.getElementById(item.btn).classList.remove('active');
-        });
-
-        const selected = charts[type];
-        document.getElementById(selected.div).style.visibility = 'visible';
-        document.getElementById(selected.btn).classList.add('active');
-
-        Plotly.Plots.resize(selected.div);
+    function toggleIndPanel() {
+        const p = document.getElementById('indPanel');
+        if (p) p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
     }
 
-    // --- DİĞER FONKSİYONLAR ---
-    function updateTime() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('tr-TR');
+    let noteActive = false;
+    function toggleNoteMode() {
+        noteActive = !noteActive;
+        const statusSpan = document.getElementById('noteStatus');
+        if (statusSpan) statusSpan.innerText = noteActive ? "ON" : "OFF";
     }
-    setInterval(updateTime, 1000);
-    updateTime();
 
-    window.onresize = function() {
-        Plotly.Plots.resize('lineChart');
-        Plotly.Plots.resize('candleChart');
-        Plotly.Plots.resize('barChart');
-    };
+    setInterval(() => {
+        const clockEl = document.getElementById('clock');
+        if (clockEl) clockEl.innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
 </script>
 </body>
 </html>

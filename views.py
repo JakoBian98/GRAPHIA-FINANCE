@@ -787,9 +787,9 @@ async def Finance():
     try:
         sembol = request.form.get('hisse').upper()
         Dil = request.form.get('Dil')
-        veri = yf.Ticker(sembol)
         tarih = "Bilinmiyor"
-        gecmis = veri.history(period="1d")
+        veri = yf.Ticker(sembol)
+        gecmis_ = veri.history(period="5d")
         net_kar_marjı = np.nan
         en_yuksek = np.nan
         defter_değeri = np.nan
@@ -1511,11 +1511,6 @@ async def Finance():
                                    gelir_bölü_çalışan = gelir_bölü_çalışan,halka_arz_fiyatı=halka_arz,
                                    kuruluş_yılı=kuruluş_yılı,indikatör=iştah,renk=renk,güven_mesajı=güven_mesajı,peg_durum=peg_durum,insider_mesajı=insider_mesajı,öneriler=öneriler,
                                    ema_listesi = ema_listesi_tablo,ema_sözlük=ema_listesi_sözlük,long_name=long_name,bilanço_tarihi=bilanço_tarihi,bilanço_beklenti=bilanço_beklenti)
-    except KeyError as e:
-        return f"<h1>📊 Veri Formatı Hatası</h1><p>Borsadan gelen verilerde beklenen ...str alanı bulunamadı.</p>"
-    except requests.exceptions.Timeout:
-        return "<h1>⌛ Sunucu Yanıt Vermiyor</h1><p>Veri kaynağı (Yahoo Finance/Borsa) çok geç yanıt veriyor, lütfen tekrar deneyin.</p>"
-
 
     except (requests.exceptions.ConnectionError, ConnectionError):
         return "<h1>🌐 Bağlantı Hatası</h1><p>İnternet bağlantınızı kontrol edin veya veri sağlayıcısının erişilebilir olduğundan emin olun.</p>"
@@ -1536,18 +1531,19 @@ async def Finance():
         return "<h1>🔒 Erişim Yetkisi Yok</h1><p>Sistem dosyalarına veya veritabanına erişim izniniz bulunmuyor.</p>"
 
     except Exception as e:
-        print(e)
-        return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi. </p>"
-
+        return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi.</p>"
 
 
 
 @app.route("/Hacim_Ekranı")
 def hacim_ekranı():
-    p = session.get('last_period', '1mo')
-    i = session.get('last_interval', '1d')
-    s = session.get('last_sembol', '')
-    return render_template("hacimmenu.html",p=p,i=i,s=s)
+    try:
+        p = session.get('last_period', '1mo')
+        i = session.get('last_interval', '1d')
+        s = session.get('last_sembol', '')
+        return render_template("hacimmenu.html", p=p, i=i, s=s)
+    except:
+        return "<h1>Bir Hata Oluştu</h1>"
 
 
 @app.route("/Hacim",methods=['POST'])
@@ -1740,45 +1736,47 @@ def _find_col(columns, *candidates):
 
 
 def knoxville_divergence(df, osc_col):
-    if df is None or df.empty or osc_col not in df.columns:
+    try:
+        if df is None or df.empty or osc_col not in df.columns:
+            return df
+
+        close_ser = df['Close'].iloc[:, 0] if isinstance(df['Close'], pd.DataFrame) else df['Close']
+        low_ser = df['Low'].iloc[:, 0] if isinstance(df['Low'], pd.DataFrame) else df['Low']
+        high_ser = df['High'].iloc[:, 0] if isinstance(df['High'], pd.DataFrame) else df['High']
+        osc_ser = df[osc_col].iloc[:, 0] if isinstance(df[osc_col], pd.DataFrame) else df[osc_col]
+
+        diff_period = 20 if len(df) > 30 else 5
+
+        df = df.copy()
+        df['mom_20'] = close_ser.diff(diff_period)
+
+        df['knox_bull'] = (low_ser < low_ser.shift(1)) & (osc_ser > osc_ser.shift(1))
+
+        df['knox_bear'] = (high_ser > high_ser.shift(1)) & (osc_ser < osc_ser.shift(1))
+
         return df
-
-    close_ser = df['Close'].iloc[:, 0] if isinstance(df['Close'], pd.DataFrame) else df['Close']
-    low_ser = df['Low'].iloc[:, 0] if isinstance(df['Low'], pd.DataFrame) else df['Low']
-    high_ser = df['High'].iloc[:, 0] if isinstance(df['High'], pd.DataFrame) else df['High']
-    osc_ser = df[osc_col].iloc[:, 0] if isinstance(df[osc_col], pd.DataFrame) else df[osc_col]
-
-    diff_period = 20 if len(df) > 30 else 5
-
-
-    df = df.copy()
-    df['mom_20'] = close_ser.diff(diff_period)
-
-
-    df['knox_bull'] = (low_ser < low_ser.shift(1)) & (osc_ser > osc_ser.shift(1))
-
-    df['knox_bear'] = (high_ser > high_ser.shift(1)) & (osc_ser < osc_ser.shift(1))
-
-    return df
+    except:
+        return f"Bir Hata Oluştu "
 
 
 def safe_append_indicator(df, indicator_data, fallback_name):
-    if indicator_data is None:
-        return df
-
     try:
-        if isinstance(indicator_data, pd.Series):
-            indicator_data.name = fallback_name if not indicator_data.name else indicator_data.name
-            return pd.concat([df, indicator_data], axis=1)
-        elif isinstance(indicator_data, pd.DataFrame):
-            return pd.concat([df, indicator_data], axis=1)
+        if indicator_data is None:
+            return df
 
-    except Exception as e:
-        print(f"Hata: {fallback_name} eklenirken bir problem oluştu: {e}")
+        try:
+            if isinstance(indicator_data, pd.Series):
+                indicator_data.name = fallback_name if not indicator_data.name else indicator_data.name
+                return pd.concat([df, indicator_data], axis=1)
+            elif isinstance(indicator_data, pd.DataFrame):
+                return pd.concat([df, indicator_data], axis=1)
 
-    return df
+        except Exception as e:
+            print(f"Hata: {fallback_name} eklenirken bir problem oluştu: {e}")
 
-
+        return df
+    except:
+        return f"Bir Hata Oluştu"
 
 @app.route("/Grafik Penceresi", methods=["POST"])
 def grafik_penceresi():
@@ -4819,6 +4817,5 @@ def borsa_paneli():
 
 
 if __name__ == "__main__":
-    threading.Thread(target=fiyat_kontrol_dongusu, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

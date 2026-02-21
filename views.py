@@ -4523,6 +4523,7 @@ def coinler_en_popüler():
         if fiyatlar is not None:
             del fiyatlar
         if coin_listesi is not None:
+            del coin_listesi
 
         if data is not None:
             del data

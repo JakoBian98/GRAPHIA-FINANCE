@@ -4524,7 +4524,6 @@ def coinler_en_popüler():
             del fiyatlar
         if coin_listesi is not None:
             del coin_listesi
-
         if data is not None:
             del data
         gc.collect()

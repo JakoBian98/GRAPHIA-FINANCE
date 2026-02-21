@@ -47,13 +47,6 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-def email_gecerli_mi(email):
-    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    if re.match(regex, email):
-        return True
-    return False
-
-
 
 
 
@@ -128,6 +121,9 @@ def mail_gonder(alici, sembol, fiyat):
         print(f">>> Mail gönderildi: {sembol}")
     except Exception as e:
         print(f">>> Mail Hatası: {e}")
+
+import gc
+
 
 
 def fiyat_kontrol_dongusu():
@@ -227,11 +223,7 @@ def set_alarm_kaydet():
     hedef_fiyat = float(request.form.get('hedef_fiyat'))
     user_email = request.form.get('email').strip()
 
-    if email_gecerli_mi(user_email):
-        return "<h1>Hata: Lütfen geçerli bir e-posta adresi girin!</h1>"
-
     try:
-        # DOSYA İSMİNE DİKKAT: v2
         with sqlite3.connect('alarms_v2.db') as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -476,6 +468,26 @@ def kripto_ısı_haritası():
     except Exception as e:
         print(e)
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi.</p>"
+    finally:
+        if client_binance is not None:
+            try:
+                client_binance.close()
+            except:
+                pass
+            del client_binance
+        if df is not None:
+            del df
+        if kripto_listesi is not None:
+            del kripto_listesi
+        if tickers is not None:
+            del tickers
+        if fig is not None:
+            fig.close()
+            del fig
+        if graph_html is not None:
+            del graph_html
+        gc.collect()
+        gc.collect(generation=2)
 
 
 @app.route("/")
@@ -657,130 +669,152 @@ def hisse_ısı_haritası_başlangıç():
 @app.route('/Graphia_Hisse_Isı_Haritası',methods=['POST','GET'])
 @cache.cached(timeout=300,query_string=True)
 def hisse_ısı_haritası():
-    nasdaq_300_hisseleri = [
-        "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "BRK-B", "UNH",
-        "LLY", "JPM", "XOM", "V", "MA", "AVGO", "HD", "PG", "COST", "JNJ",
-        "ABBV", "MRK", "CRM", "BAC", "ADBE", "NFLX", "AMD", "PEP", "KO", "TMO",
-        "WMT", "CVX", "DIS", "CSCO", "ACN", "ABT", "LIN", "ORCL", "INTU", "QCOM",
-        "TXN", "AMAT", "DHR", "GE", "VZ", "AMGN", "PFE", "UNP", "LOW", "HON",
-        "IBM", "PM", "CAT", "GS", "ISRG", "MS", "RTX", "BA", "BKNG", "SPGI",
-        "UPS", "SYK", "LMT", "DE", "TJX", "BLK", "NOW", "AXP", "MDLZ", "VRTX",
-        "ADI", "REGN", "ADP", "PLD", "ETN", "MU", "SNPS", "CDNS", "ELV", "CI",
-        "BSX", "ZTS", "MCD", "EOG", "SLB", "WM", "ITW", "CVS", "BDX", "MO",
-        "USB", "T", "MMC", "PH", "GD", "MDT", "PGR", "HCA", "ORLY", "MAR",
-        "MCK", "CL", "NSC", "AON", "EMR", "APD", "BSX", "F", "GM", "FCX",
-        "MET", "AIG", "D", "ED", "SO", "DUK", "SRE", "AEP", "WM", "VRSK",
-        "IT", "CTAS", "ROP", "PAYX", "EL", "KDP", "STZ", "MNST", "ADM", "CPB",
-        "K", "GIS", "SYY", "KR", "WBA", "TGT", "TJX", "ROST", "DLTR", "DG",
-        "AZO", "GPN", "FI", "JKHY", "V", "MA", "AXP", "DFS", "COF", "PYPL",
-        "PANW", "FTNT", "CRWD", "OKTA", "ZS", "DDOG", "TEAM", "MDB", "SNOW", "NET",
-        "PATH", "U", "PLTR", "AI", "SMCI", "ARM", "ASML", "LRCX", "KLAC", "MCHP",
-        "ON", "MPWR", "NXPI", "SWKS", "QRVO", "ALGN", "IDXX", "IQV", "HCA", "HUM",
-        "CNC", "MOH", "CI", "CVS", "GEHC", "DHR", "TMO", "A", "WAT", "MTD",
-        "ZBH", "SYK", "EW", "BSX", "MDT", "BAX", "DXCM", "PODD", "BIIB", "AMGN",
-        "MRNA", "GILD", "REGN", "VRTX", "ILMN", "EXC", "XEL", "PEG", "WEC", "ES",
-        "EIX", "FE", "DTE", "ETR", "AEE", "LNT", "CNP", "CMS", "NI", "PNW",
-        "NRG", "VST", "CEG", "AWK", "PSA", "PLD", "AMT", "CCI", "EQIX", "SBAC",
-        "DLR", "VICI", "WY", "SPG", "CBRE", "AVB", "EQR", "MAA", "UDR", "ESS",
-        "CPRT", "ODFL", "CSX", "UNP", "NSC", "FDX", "UPS", "LUV", "DAL", "UAL",
-        "AAL", "MAR", "HLT", "BKNG", "EXPE", "ABNB", "TRV", "CB", "PGR", "ALL",
-        "MET", "PRU", "AFL", "GL", "AJG", "WTW", "BRO", "MMC", "AON", "MCO"
-    ]
-    period = request.args.get('period','1d')
+    try:
+        nasdaq_300_hisseleri = [
+            "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "BRK-B", "UNH",
+            "LLY", "JPM", "XOM", "V", "MA", "AVGO", "HD", "PG", "COST", "JNJ",
+            "ABBV", "MRK", "CRM", "BAC", "ADBE", "NFLX", "AMD", "PEP", "KO", "TMO",
+            "WMT", "CVX", "DIS", "CSCO", "ACN", "ABT", "LIN", "ORCL", "INTU", "QCOM",
+            "TXN", "AMAT", "DHR", "GE", "VZ", "AMGN", "PFE", "UNP", "LOW", "HON",
+            "IBM", "PM", "CAT", "GS", "ISRG", "MS", "RTX", "BA", "BKNG", "SPGI",
+            "UPS", "SYK", "LMT", "DE", "TJX", "BLK", "NOW", "AXP", "MDLZ", "VRTX",
+            "ADI", "REGN", "ADP", "PLD", "ETN", "MU", "SNPS", "CDNS", "ELV", "CI",
+            "BSX", "ZTS", "MCD", "EOG", "SLB", "WM", "ITW", "CVS", "BDX", "MO",
+            "USB", "T", "MMC", "PH", "GD", "MDT", "PGR", "HCA", "ORLY", "MAR",
+            "MCK", "CL", "NSC", "AON", "EMR", "APD", "BSX", "F", "GM", "FCX",
+            "MET", "AIG", "D", "ED", "SO", "DUK", "SRE", "AEP", "WM", "VRSK",
+            "IT", "CTAS", "ROP", "PAYX", "EL", "KDP", "STZ", "MNST", "ADM", "CPB",
+            "K", "GIS", "SYY", "KR", "WBA", "TGT", "TJX", "ROST", "DLTR", "DG",
+            "AZO", "GPN", "FI", "JKHY", "V", "MA", "AXP", "DFS", "COF", "PYPL",
+            "PANW", "FTNT", "CRWD", "OKTA", "ZS", "DDOG", "TEAM", "MDB", "SNOW", "NET",
+            "PATH", "U", "PLTR", "AI", "SMCI", "ARM", "ASML", "LRCX", "KLAC", "MCHP",
+            "ON", "MPWR", "NXPI", "SWKS", "QRVO", "ALGN", "IDXX", "IQV", "HCA", "HUM",
+            "CNC", "MOH", "CI", "CVS", "GEHC", "DHR", "TMO", "A", "WAT", "MTD",
+            "ZBH", "SYK", "EW", "BSX", "MDT", "BAX", "DXCM", "PODD", "BIIB", "AMGN",
+            "MRNA", "GILD", "REGN", "VRTX", "ILMN", "EXC", "XEL", "PEG", "WEC", "ES",
+            "EIX", "FE", "DTE", "ETR", "AEE", "LNT", "CNP", "CMS", "NI", "PNW",
+            "NRG", "VST", "CEG", "AWK", "PSA", "PLD", "AMT", "CCI", "EQIX", "SBAC",
+            "DLR", "VICI", "WY", "SPG", "CBRE", "AVB", "EQR", "MAA", "UDR", "ESS",
+            "CPRT", "ODFL", "CSX", "UNP", "NSC", "FDX", "UPS", "LUV", "DAL", "UAL",
+            "AAL", "MAR", "HLT", "BKNG", "EXPE", "ABNB", "TRV", "CB", "PGR", "ALL",
+            "MET", "PRU", "AFL", "GL", "AJG", "WTW", "BRO", "MMC", "AON", "MCO"
+        ]
+        period = request.args.get('period', '1d')
 
-    intervals = {
-        "1d": "1h",
-        "1wk": "1h",
-        "1mo": "1d",
-        "6mo": "1d",
-        "1y": "1d",
-        "max": "1wk"
-    }
-    interval = intervals.get(period, "1h")
+        intervals = {
+            "1d": "1h",
+            "1wk": "1h",
+            "1mo": "1d",
+            "6mo": "1d",
+            "1y": "1d",
+            "max": "1wk"
+        }
+        interval = intervals.get(period, "1h")
 
-    df = yf.download(nasdaq_300_hisseleri, period=period, interval=interval, progress=False, threads=50)
-    hisse_listesi, degisim_listesi, hacim_listesi, renk_listesi, fiyat_listesi = [], [], [], [], []
+        df = yf.download(nasdaq_300_hisseleri, period=period, interval=interval, progress=False, threads=50)
+        hisse_listesi, degisim_listesi, hacim_listesi, renk_listesi, fiyat_listesi = [], [], [], [], []
 
-    for hisse in nasdaq_300_hisseleri:
-        try:
-            if hisse not in df['Close'] or df['Close'][hisse].dropna().empty:
+        for hisse in nasdaq_300_hisseleri:
+            try:
+                if hisse not in df['Close'] or df['Close'][hisse].dropna().empty:
+                    continue
+
+                kapanis = float(df['Close'][hisse].dropna().iloc[-1])
+                acilis = float(df['Open'][hisse].dropna().iloc[0])
+                hacim = float(df['Volume'][hisse].dropna().iloc[-1])
+
+                if pd.isna(kapanis) or pd.isna(acilis) or hacim <= 0:
+                    continue
+
+                yuzdelik_degisim = (kapanis - acilis) / acilis * 100
+
+                # Renk Hesaplaması
+                if yuzdelik_degisim <= -3:
+                    renk = "#8b0000"
+                elif yuzdelik_degisim < 0:
+                    renk = "#ff4b5c"
+                elif yuzdelik_degisim < 3:
+                    renk = "#00ffbb"
+                else:
+                    renk = "#006400"
+
+                hisse_listesi.append(hisse)
+                degisim_listesi.append(yuzdelik_degisim)
+                hacim_listesi.append(hacim)
+                fiyat_listesi.append(kapanis)
+                renk_listesi.append(renk)
+            except:
                 continue
 
-            kapanis = float(df['Close'][hisse].dropna().iloc[-1])
-            acilis = float(df['Open'][hisse].dropna().iloc[0])
-            hacim = float(df['Volume'][hisse].dropna().iloc[-1])
+        if not hisse_listesi:
+            return "Veri çekilemedi, borsa kapalı olabilir."
 
-            if pd.isna(kapanis) or pd.isna(acilis) or hacim <= 0:
-                continue
+        # Görsel boyut için logaritmik hesaplama
+        final_df = pd.DataFrame({
+            "Hisse": hisse_listesi,
+            "Degisim": degisim_listesi,
+            "Hacim": hacim_listesi,
+            "Renk": renk_listesi,
+            "Fiyat": fiyat_listesi,
+            "Boyut": [h ** 0.55 for h in hacim_listesi]
+        })
 
-            yuzdelik_degisim = (kapanis - acilis) / acilis * 100
+        final_df['Gorsel_Boyut'] = final_df['Hacim'] ** 0.90
 
-            # Renk Hesaplaması
-            if yuzdelik_degisim <= -3:
-                renk = "#8b0000"
-            elif yuzdelik_degisim < 0:
-                renk = "#ff4b5c"
-            elif yuzdelik_degisim < 3:
-                renk = "#00ffbb"
-            else:
-                renk = "#006400"
+        fig = px.treemap(
+            final_df,
+            path=[px.Constant("NASDAQ 300"), 'Hisse'],
+            values='Gorsel_Boyut',
+            custom_data=['Degisim', 'Hacim', 'Fiyat']
+        )
 
-            hisse_listesi.append(hisse)
-            degisim_listesi.append(yuzdelik_degisim)
-            hacim_listesi.append(hacim)
-            fiyat_listesi.append(kapanis)
-            renk_listesi.append(renk)
-        except:
-            continue
+        fig.update_layout(
+            paper_bgcolor="#05070a",
+            plot_bgcolor="#05070a",
+            font=dict(color="white", family="Fira Code"),
+            margin=dict(t=30, l=10, r=10, b=10)
+        )
 
-    if not hisse_listesi:
-        return "Veri çekilemedi, borsa kapalı olabilir."
+        fig.update_traces(
+            marker=dict(colors=final_df['Renk'], line=dict(width=1, color='#0f172a')),
+            texttemplate="<b>%{label}</b><br>%{customdata[0]:.2f}%",
+            hovertemplate="<b>%{label}</b><br>Değişim: %{customdata[0]:.2f}%<br>Fiyat: %{customdata[2]:.2f}$<extra></extra>"
+        )
 
-    # Görsel boyut için logaritmik hesaplama
-    final_df = pd.DataFrame({
-        "Hisse": hisse_listesi,
-        "Degisim": degisim_listesi,
-        "Hacim": hacim_listesi,
-        "Renk": renk_listesi,
-        "Fiyat": fiyat_listesi,
-        "Boyut": [h ** 0.55 for h in hacim_listesi]
-    })
+        config = {
+            'scrollZoom': True,
+            'displayModeBar': True,
+            'modeBarButtonsToAdd': ['zoomIn2d', 'zoomOut2d', 'pan2d', 'resetScale2d'],
+            'displaylogo': False,
+            'responsive': True
+        }
 
-    final_df['Gorsel_Boyut'] = final_df['Hacim'] ** 0.90
-
-    fig = px.treemap(
-        final_df,
-        path=[px.Constant("NASDAQ 300"), 'Hisse'],
-        values='Gorsel_Boyut',
-        custom_data=['Degisim', 'Hacim', 'Fiyat']
-    )
-
-    fig.update_layout(
-        paper_bgcolor="#05070a",
-        plot_bgcolor="#05070a",
-        font=dict(color="white", family="Fira Code"),
-        margin=dict(t=30, l=10, r=10, b=10)
-    )
-
-    fig.update_traces(
-        marker=dict(colors=final_df['Renk'], line=dict(width=1, color='#0f172a')),
-        texttemplate="<b>%{label}</b><br>%{customdata[0]:.2f}%",
-        hovertemplate="<b>%{label}</b><br>Değişim: %{customdata[0]:.2f}%<br>Fiyat: %{customdata[2]:.2f}$<extra></extra>"
-    )
-
-    config = {
-        'scrollZoom': True,
-        'displayModeBar': True,
-        'modeBarButtonsToAdd': ['zoomIn2d', 'zoomOut2d', 'pan2d', 'resetScale2d'],
-        'displaylogo': False,
-        'responsive': True
-    }
-
-    graph_html = pio.to_html(fig, full_html=False, config=config)
-    return render_template("heatmap.html", graph_html=graph_html)
-
-
-
+        graph_html = pio.to_html(fig, full_html=False, config=config)
+        return render_template("heatmap.html", graph_html=graph_html)
+    except Exception:
+        return "<h1>Bir Hata Oluştu </h1>"
+    finally:
+        if df is not None:
+            del df
+        if final_df is not None:
+            del final_df
+        listeler = [
+            'hisse_listesi', 'degisim_listesi', 'hacim_listesi',
+            'renk_listesi', 'fiyat_listesi', 'renk_paleti'
+        ]
+        for var_name in listeler:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    del locals()[var_name]
+                except:
+                    pass
+        if fig is not None:
+            fig.close()
+            del fig
+        if graph_html is not None:
+            del graph_html
+        gc.collect()
+        gc.collect(generation=2)
 
 @app.route("/Finance",methods=['POST'])
 def Finance():
@@ -1534,6 +1568,42 @@ def Finance():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi.</p>"
+    finally:
+        # ----- 1. TICKER NESNELERİNİ TEMİZLE -----
+        if veri is not None:
+            del veri
+
+        # ----- 2. DATAFRAME'LERİ TEMİZLE -----
+        dataframe_list = [
+            'gecmis_', 'df', 'ema_df', 'veri_ath', 'df_adx',
+            'kar', 'max_geçmiş', 'geçmiş_hepsi', 'insider_verisi',
+            'öneriler', 'ai_ozet_veri'
+        ]
+
+        for var_name in dataframe_list:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    del locals()[var_name]
+                except:
+                    pass
+
+        # ----- 3. BÜYÜK LİSTELERİ TEMİZLE -----
+        list_list = [
+            'ema_listesi_tablo', 'ema_listesi_sözlük', 'periyotlar',
+            'haber_metni', 'son_haberler', 'alımlar'
+        ]
+
+        for var_name in list_list:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    del locals()[var_name]
+                except:
+                    pass
+
+        if ai_response is not None:
+            del ai_response
+        gc.collect()
+        gc.collect(generation=2)
 
 
 
@@ -1701,6 +1771,10 @@ def hacim_bilgisi():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi.</p>"
+    finally:
+        if hacim_json:
+            del hacim_json
+        gc.collect()
 
 def val_ex(x):
     try:
@@ -3622,10 +3696,8 @@ def grafik_penceresi():
             try:
                 if kolon and kolon in df.columns and len(df) > 0:
                     deger = df[kolon].iloc[-1]
-                    # Eğer değer array/liste ise
                     if hasattr(deger, 'values') and len(deger.values) > 0:
                         return round(float(deger.values.flatten()[0]), yuvarlama)
-                    # Tekil değer ise
                     elif not pd.isna(deger):
                         return round(float(deger), yuvarlama)
             except:
@@ -3664,7 +3736,6 @@ def grafik_penceresi():
                 },
                 "trend_durumu": val_ex("GÜÇLÜ" if last_adx and last_adx > 25 else "ZAYIF/YATAY"),
 
-                # --- YENİ EKLENEN TÜM GÖSTERGELER ---
                 "momentum_ve_dongu": {
                     "RVI_Göreceli_Canlılık": val_ex(guvenli_df_hesapla(rvi_df, rvi_col)),
                     "SMI_Momentum_Endeksi": val_ex(guvenli_df_hesapla(smi_df_data, smi_col)),
@@ -3707,7 +3778,6 @@ def grafik_penceresi():
                                           "DEATH CROSS (Ayı)" if death_cross.iloc[-1] else "Nötr / Kesişim Yok")
             })
 
-            # 2. Hacim ve Güç Endekslerine Gator'u ekleyelim
             ai_ozet_veri["hacim_ve_guc_endeksleri"].update({
                 "williams_gator": {
                     "ust_deger": val_ex(guvenli_series_hesapla(df, 'Gator_Upper', yuvarlama=4)),
@@ -3719,7 +3789,7 @@ def grafik_penceresi():
                 }
             })
 
-            # 3. Risk ve Stres Analizine Chandelier Exit'i ekleyelim
+
             ai_ozet_veri["risk_ve_stres_analizi"].update({
                 "chandelier_exit_long": val_ex(guvenli_series_hesapla(df, 'Chandelier_Long', yuvarlama=2)),
                 "chandelier_exit_short": val_ex(guvenli_series_hesapla(df, 'Chandelier_Short', yuvarlama=2)),
@@ -3729,7 +3799,6 @@ def grafik_penceresi():
 
         except Exception as e:
             print(f"AI özet veri oluşturulurken hata: {e}")
-            # Yedek boş sözlük oluştur
             ai_ozet_veri = {
                 "sembol": val_ex(sembol) if 'sembol' in locals() else "Bilinmiyor",
                 "hata": 'Hata',
@@ -3818,6 +3887,53 @@ def grafik_penceresi():
     except Exception as e:
         print(e)
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
+    finally:
+        silinecek_df_list = [
+            'df', 'ichi_df', 'smi_df_data', 'psar_df', 'rvi_df',
+            'ui_df', 'tsi_df', 'nvi_df', 'donchian_df', 'ha_df',
+            'spk_df', 'st_df', 'veri_ath'
+        ]
+
+        for var_name in silinecek_df_list:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    del locals()[var_name]
+                except:
+                    pass
+        silinecek_fig_list = [
+            'fig', 'fig_candle', 'fig_candle_volume', 'fig_bar',
+            'fig_alan', 'fig_heikin', 'hollow_candle'
+        ]
+
+        for var_name in silinecek_fig_list:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    if hasattr(locals()[var_name], 'close'):
+                        locals()[var_name].close()
+                    del locals()[var_name]
+                except:
+                    pass
+        buyuk_listeler = [
+            'x_ekseni', 'mum_open', 'mum_high', 'mum_low', 'mum_close',
+            'volume_values', 'hacim_etiketleri', 'mum_genislikleri',
+            'renkler', 'bear_vals', 'bull_vals', 'cho_vals'
+        ]
+
+        for var_name in buyuk_listeler:
+            if var_name in locals() and locals()[var_name] is not None:
+                try:
+                    del locals()[var_name]
+                except:
+                    pass
+        if 'ai_ozet_veri' in locals():
+            try:
+                del locals()['ai_ozet_veri']
+            except:
+                pass
+        import gc
+        gc.collect()
+        gc.collect(generation=2)
+        gc.close()
 
 
 @app.route("/Coklu_Grafik_Giris")
@@ -3952,7 +4068,29 @@ def çoklu_grafikler_penceresi():
         return "<h1>🔒 Erişim Yetkisi Yok</h1><p>Sistem dosyalarına veya veritabanına erişim izniniz bulunmuyor.</p>"
 
     except Exception as e:
-        return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi. Hata: {type(e).__name__}</p>"
+        return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi. Hata</p>"
+    finally:
+        if df1 is not None:
+            del df1
+        if df2 is not None:
+            del df2
+        if fiyat1 is not None:
+            del fiyat1
+        if fiyat2 is not None:
+            del fiyat2
+
+        if fig is not None:
+            fig.close()
+            del fig
+
+        if x_ekseni is not None:
+            del x_ekseni
+
+        if karşılaştırma_json is not None:
+            del karşılaştırma_json
+
+        gc.collect()
+        gc.collect(generation=2)
 
 
 @app.route("/Dolar_Bazlı_Grafik",methods=['POST','GET'])
@@ -4134,6 +4272,38 @@ def dolar_bazlı_grafik_ekranı():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
+    finally:
+        if sembol_df is not None:
+            del sembol_df
+        if usd_df is not None:
+            del usd_df
+        if kur_df is not None:
+            del kur_df
+        if veri is not None:
+            del veri
+        if data is not None:
+            del data
+        if dolar_bazlı_seri is not None:
+            del dolar_bazlı_seri
+        if df_bazlı is not None:
+            del df_bazlı
+        if fig is not None:
+            fig.close()
+            del fig
+        if fig_candle is not None:
+            fig_candle.close()
+            del fig_candle
+
+        if x_ekseni is not None:
+            del x_ekseni
+        if y_ekseni is not None:
+            del y_ekseni
+        if grafik_json is not None:
+            del grafik_json
+        if grafik_mum_json is not None:
+            del grafik_mum_json
+        gc.collect()
+        gc.collect(generation=2)
 
 
 
@@ -4268,6 +4438,11 @@ def usd_hacim_analiz():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
+    finally:
+        del df
+        del usd_df
+        del usd_hacim_json
+        gc.collect()
 
 
 
@@ -4342,6 +4517,18 @@ def coinler_en_popüler():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
+    finally:
+        if df is not None:
+            del df
+        if fiyatlar is not None:
+            del fiyatlar
+        if coin_listesi is not None:
+
+        if data is not None:
+            del data
+        gc.collect()
+        gc.collect(generation=2)
+
 
 @app.route("/Borsa_Paneli")
 @cache.cached(timeout=300)
@@ -4815,7 +5002,17 @@ def borsa_paneli():
 
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
-
+    finally:
+        if df is not None:
+            del df
+        if fiyatlar is not None:
+            del fiyatlar
+        if hacim is not None:
+            del hacim
+        if hisse_listesi is not None:
+            del hisse_listesi
+        gc.collect()
+        gc.collect(generation=2)
 
 
 if __name__ == "__main__":

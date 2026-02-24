@@ -279,7 +279,7 @@ def kar_zarar_hesapla():
         interval = '1d' if not period == "max" else '1wk'
         karşılaştırma_varlığı = request.form.get('varlık')
 
-        df = yf.download(sembol, period=period, interval=interval, progress=False)
+        df = yf.download(sembol, period=period, interval=interval, progress=False,prepost=False)
         if df.empty: return "Veri bulunamadı"
 
         if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
@@ -291,7 +291,7 @@ def kar_zarar_hesapla():
             varlık_ilk_fiyat = ilk_fiyat
             varlık_son_fiyat = son_fiyat
         else:
-            v_df = yf.download(karşılaştırma_varlığı, period=period, interval=interval, progress=False)
+            v_df = yf.download(karşılaştırma_varlığı, period=period, interval=interval, progress=False,prepost=False)
             if v_df.empty: return "Karşılaştırma varlığı verisi bulunamadı"
             if isinstance(v_df.columns, pd.MultiIndex): v_df.columns = v_df.columns.get_level_values(0)
             varlık_ilk_fiyat = float(v_df['Close'].values[0])
@@ -504,7 +504,7 @@ def selamün_aleyküm():
         ticker_verileri = []
 
         ticker_listesi = list(hisse_sozluk.keys())
-        data = yf.download(ticker_listesi, period='2d', interval='15m', group_by='ticker', progress=False)
+        data = yf.download(ticker_listesi, period='2d', interval='15m', group_by='ticker', progress=False,prepost=False)
 
         for ticker in ticker_listesi:
             try:
@@ -710,7 +710,7 @@ def hisse_ısı_haritası():
         }
         interval = intervals.get(period, "1h")
 
-        df = yf.download(nasdaq_300_hisseleri, period=period, interval=interval, progress=False, threads=5)
+        df = yf.download(nasdaq_300_hisseleri, period=period, interval=interval, progress=False, threads=5,prepost=False)
         hisse_listesi, degisim_listesi, hacim_listesi, renk_listesi, fiyat_listesi = [], [], [], [], []
 
         for hisse in nasdaq_300_hisseleri:
@@ -868,7 +868,7 @@ def Finance():
             return "Hisse Kısmı Boş Olamaz"
 
         try:
-            df = yf.download(sembol, period="5d", interval="1d", progress=False)
+            df = yf.download(sembol, period="5d", interval="1d", progress=False,prepost=False)
         except:
             df = pd.DataFrame()
 
@@ -1040,7 +1040,7 @@ def Finance():
                     else:
                         hacim = np.nan
                         ortalama_hacim = np.nan
-                    veri_ath = yf.download(sembol, period='max', interval="1d",progress=False)
+                    veri_ath = yf.download(sembol, period='max', interval="1d",progress=False,prepost=False)
                     if isinstance(veri_ath.columns, pd.MultiIndex):
                         veri_ath.columns = veri_ath.columns.get_level_values(0)
                     en_dusuk = float(veri_ath['Close'].min())
@@ -1074,7 +1074,7 @@ def Finance():
                 defter_değeri = veri.info.get('priceToBook')
                 borç_bölü_özkaynak_oran = veri.info.get('debtToEquity')
                 short_ratio = veri.info.get('shortRatio', np.nan)
-                df_adx = yf.download(sembol,period="15d",interval="1h",progress=False)
+                df_adx = yf.download(sembol,period="15d",interval="1h",progress=False,prepost=False)
 
                 if isinstance(df_adx.columns,pd.MultiIndex):
                     df_adx.columns = df_adx.columns.get_level_values(0)
@@ -1125,7 +1125,7 @@ def Finance():
                 bilanço_tarihi = "Belirtilmemiş"
                 bilanço_beklenti = "Veri Yok"
                 kar = veri.earnings_dates
-                veri_ath = yf.download(sembol, period="max", interval="1d", progress=False)
+                veri_ath = yf.download(sembol, period="max", interval="1d", progress=False,prepost=False)
                 veri_ath = pd.DataFrame(veri_ath)
                 if isinstance(veri_ath.columns, pd.MultiIndex):
                     veri_ath.columns = veri_ath.columns.get_level_values(0)
@@ -1641,7 +1641,7 @@ def hacim_bilgisi():
             interval = "1d"
 
         try:
-            df = yf.download(sembol, period=period, interval=interval)
+            df = yf.download(sembol, period=period, interval=interval,prepost=False)
         except:
             df = pd.DataFrame()
 
@@ -1889,7 +1889,7 @@ def grafik_penceresi():
 
         df = yf.download(
             sembol, period=period, interval=interval, progress=False,
-            auto_adjust=True, actions=True, threads=False
+            auto_adjust=True, actions=True, threads=False,prepost=False
         )
         if df.empty or len(df) < 2:
             return "Hisse Senedi Bulunamadı veya yetersiz veri"
@@ -1973,7 +1973,7 @@ def grafik_penceresi():
 
         son_fiyat = float(mum_close[-1])
         ilk_fiyat = float(mum_close[0])
-        veri_ath = yf.download(sembol, period="max", interval="1d", progress=False, auto_adjust=True)
+        veri_ath = yf.download(sembol, period="max", interval="1d", progress=False, auto_adjust=True,prepost=False)
         veri_ath = flat_cols(pd.DataFrame(veri_ath))
         ath = float(veri_ath["Close"].max())
         atl = float(veri_ath["Close"].min())
@@ -2934,7 +2934,7 @@ def grafik_penceresi():
                     name="RSI",
                     visible='legendonly'
                 ),
-                row=1, col=1
+                row=3, col=1
             )
 
             fig_candle.add_hline(y=70, line_dash="dot", line_color="rgba(255, 75, 92, 0.5)", row=2, col=1)
@@ -3893,35 +3893,78 @@ def grafik_penceresi():
         print(e)
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi./p>"
     finally:
-        silinecek_df_list = [
+        df_list = [
             'df', 'ichi_df', 'smi_df_data', 'psar_df', 'rvi_df',
             'ui_df', 'tsi_df', 'nvi_df', 'donchian_df', 'ha_df',
-            'spk_df', 'st_df', 'veri_ath'
+            'spk_df', 'st_df', 'veri_ath', 'df_adx',
+            'aroon_res', 'rvi_raw', 'cmo_res', 'uo_res', 'trix_res',
+            'kst_res', 'dpo_res', 'coppock', 'cexit', 'basis',
+            'ui_res', 'nvi_series', 'rsi_res', 'wma_res', 'lrc_res',
+            'knox_bull_points', 'knox_bear_points', 'gold_cross', 'death_cross'
         ]
 
-        for var_name in silinecek_df_list:
-            if var_name in locals() and locals()[var_name] is not None:
-                try:
-                    del locals()[var_name]
-                except:
-                    pass
-        buyuk_listeler = [
-            'x_ekseni', 'mum_open', 'mum_high', 'mum_low', 'mum_close',
-            'volume_values', 'hacim_etiketleri', 'mum_genislikleri',
-            'renkler', 'bear_vals', 'bull_vals', 'cho_vals'
-        ]
-
-        for var_name in buyuk_listeler:
-            if var_name in locals() and locals()[var_name] is not None:
-                try:
-                    del locals()[var_name]
-                except:
-                    pass
-        if 'ai_ozet_veri' in locals():
+        for var_name in df_list:
             try:
-                del locals()['ai_ozet_veri']
+                if var_name in locals() and locals()[var_name] is not None:
+                    if hasattr(locals()[var_name], 'close'):
+                        locals()[var_name].close()
+                    del locals()[var_name]
             except:
                 pass
+
+        fig_list = [
+            'fig', 'fig_candle', 'fig_candle_volume', 'fig_bar',
+            'fig_alan', 'fig_heikin', 'hollow_candle'
+        ]
+
+        for var_name in fig_list:
+            try:
+                if var_name in locals() and locals()[var_name] is not None:
+                    locals()[var_name].close()
+                    del locals()[var_name]
+            except:
+                pass
+
+        list_list = [
+            'x_ekseni', 'mum_open', 'mum_high', 'mum_low', 'mum_close',
+            'volume_values', 'hacim_etiketleri', 'mum_genislikleri',
+            'renkler', 'bear_vals', 'bull_vals', 'cho_vals',
+            'st_vals', 'st_dirs', 'ha_open', 'ha_high', 'ha_low', 'ha_close',
+            'aroon_up_vals', 'aroon_down_vals', 'cmo_vals', 'kst_vals',
+            'tsi_vals', 'nvi_vals', 'dpo_vals', 'uo_vals', 'trix_vals'
+        ]
+
+        for var_name in list_list:
+            try:
+                if var_name in locals() and locals()[var_name] is not None:
+                    del locals()[var_name]
+            except:
+                pass
+
+        json_list = [
+            'fig_line', 'candle_json', 'bar_json', 'fig_candle_volume_json',
+            'heikin_json', 'alan_json', 'hollow_json'
+        ]
+
+        for var_name in json_list:
+            try:
+                if var_name in locals() and locals()[var_name] is not None:
+                    del locals()[var_name]
+            except:
+                pass
+
+        try:
+            if 'ai_ozet_veri' in locals():
+                del locals()['ai_ozet_veri']
+        except:
+            pass
+
+        try:
+            if 'ai_response' in locals():
+                del locals()['ai_response']
+        except:
+            pass
+
         gc.collect()
         gc.collect(generation=2)
 
@@ -3941,8 +3984,8 @@ def çoklu_grafikler_penceresi():
 
         if zaman_dilimi_kontrol(interval,period):
             return "<h1>Hata: Mum Aralığı (Interval), periyot aralığından büyük veya periyot aralığına eşit olamaz!</h1>"
-        df1 = yf.download(sembol1,period=period,interval=interval,progress=False)
-        df2 = yf.download(sembol2,period=period,interval=interval,progress=False)
+        df1 = yf.download(sembol1,period=period,interval=interval,progress=False,prepost=False)
+        df2 = yf.download(sembol2,period=period,interval=interval,progress=False,prepost=False)
 
         if df1.empty or df2.empty:
             return ("Bir Veya İki Hisse Senedi Verisi Çekilemedi Lütfen Sembol Bilgilerini Kontrol Edin")
@@ -4111,8 +4154,8 @@ def dolar_bazlı_grafik_ekranı():
 
         if zaman_dilimi_kontrol(interval,period):
             return "<h1>Hata: Mum Aralığı (Interval), periyot aralığından büyük veya periyot aralığına eşit olamaz!</h1>"
-        sembol_df = yf.download(sembol, period=period, interval=interval, progress=False,auto_adjust=True)
-        usd_df = yf.download(dovız_tipi, period=period, interval=interval, progress=False)
+        sembol_df = yf.download(sembol, period=period, interval=interval, progress=False,auto_adjust=True,prepost=False)
+        usd_df = yf.download(dovız_tipi, period=period, interval=interval, progress=False,prepost=False)
         veri = yf.Ticker(sembol)
         data = veri.info
         long_name = data.get('longName')
@@ -4134,7 +4177,7 @@ def dolar_bazlı_grafik_ekranı():
             return "Seçilen periyotta hisse ve kur verileri çakışmıyor. Lütfen daha geniş bir periyot seçin."
 
         if dovız_tipi in ["GC=F", "PA=F", "SI=F","BZ=F","CL=F"]:
-            kur_df = yf.download("USDTRY=X", period=period, interval=interval, progress=False)
+            kur_df = yf.download("USDTRY=X", period=period, interval=interval, progress=False,prepost=False)
             if isinstance(kur_df.columns, pd.MultiIndex):
                 kur_df.columns = kur_df.columns.get_level_values(0)
 
@@ -4143,7 +4186,7 @@ def dolar_bazlı_grafik_ekranı():
             dolar_bazlı_seri = (sembol_df.loc[ortak_tarihler, "Close"] / kur_df.loc[ortak_tarihler, "Close"]) / \
                                usd_df.loc[ortak_tarihler, "Close"]
         else:
-            kur_df = yf.download(dovız_tipi,period=period,interval=interval,progress=False)
+            kur_df = yf.download(dovız_tipi,period=period,interval=interval,progress=False,prepost=False)
             ortak = sembol_df.index.intersection(usd_df.index)
             dolar_bazlı_seri = sembol_df.loc[ortak, "Close"] / usd_df.loc[ortak, "Close"]
 
@@ -4313,8 +4356,8 @@ def usd_hacim_analiz():
         if zaman_dilimi_kontrol(interval,period):
             return "<h1>Hata: Mum Aralığı (Interval), periyot aralığından büyük veya periyot aralığına eşit olamaz!</h1>"
 
-        df = yf.download(sembol, period=period, interval=interval, progress=False)
-        usd_df = yf.download(doviz_tipi, period=period, interval=interval, progress=False)
+        df = yf.download(sembol, period=period, interval=interval, progress=False,prepost=False)
+        usd_df = yf.download(doviz_tipi, period=period, interval=interval, progress=False,prepost=False)
         if df.empty:
             return "<h1>Hisse Senedi Verisi Çekilemedi</h1>"
         if usd_df.empty:
@@ -4451,7 +4494,7 @@ def coinler_en_popüler():
             "BTC-EUR","BTC-GBP",
             "KCS-USD","RENDER-USD","TRUMP35336-USD" , "FBTC-USD" ,"QNT-USD","SLISBNBX-USD"
         ]
-        df = yf.download(semboller,period="1d",interval="1m",progress=False,threads=5,timeout=12)
+        df = yf.download(semboller,period="1d",interval="1m",progress=False,threads=5,timeout=12,prepost=False)
         if df.empty:
             return "Veri Alınamadı"
 
@@ -4945,7 +4988,7 @@ def borsa_paneli():
         }
 
         semboller = [k + ".IS" for k in hisse_rehberi.keys()]
-        df = yf.download(semboller, period="1d", interval="30m", progress=False, threads=5,timeout=20)
+        df = yf.download(semboller, period="1d", interval="30m", progress=False, threads=5,timeout=20,prepost=False)
         if df.empty:
             return "Veri Alınamadı"
 

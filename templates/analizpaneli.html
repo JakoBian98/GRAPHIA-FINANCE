@@ -292,6 +292,11 @@
         const defaultChart = 'candle';
         renderSingleChart(defaultChart);
         switchMainView(defaultChart);
+
+        // Tüm grafikler yüklendikten sonra indikatörleri gizle
+        setTimeout(() => {
+            hideAllIndicators();
+        }, 1000);
     }
 
     function renderSingleChart(id) {
@@ -368,8 +373,38 @@
         }
     }
 
-    // --- ENTEGRE EDİLEN YENİ toggleInd FONKSİYONU ---
-    function toggleInd(indName, element) {
+    // TÜM İNDİKATÖRLERİ BAŞLANGIÇTA GİZLE
+    function hideAllIndicators() {
+        const targets = ['candleChart', 'heikinChart', 'volCandleChart', 'hollowChart', 'lineChart', 'areaChart', 'barChart'];
+
+        targets.forEach(chartId => {
+            const gd = document.getElementById(chartId);
+            if (!gd || !gd._fullData) return;
+
+            // Tüm trace'lerin index'lerini al
+            const indices = gd._fullData.map((_, i) => i);
+
+            // Sadece indikatör olanları gizle (fiyat serisi hariç)
+            const indicatorIndices = indices.filter(i => {
+                const name = (gd._fullData[i].name || "").toLowerCase();
+                return !name.includes('mum') && !name.includes('candle') &&
+                       !name.includes('fiyat') && !name.includes('kapanış') &&
+                       !name.includes('hacim') && !name.includes('volume') &&
+                       !name.includes('open') && !name.includes('high') && !name.includes('low');
+            });
+
+            if (indicatorIndices.length > 0) {
+                Plotly.restyle(chartId, { visible: 'legendonly' }, indicatorIndices);
+            }
+        });
+
+        // Tüm indikatör butonlarını pasif yap
+        document.querySelectorAll('.ind-row').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    }
+
+function toggleInd(indName, element) {
     if (element) element.classList.toggle('active');
 
     var isActive = (element && element.classList.contains('active'));
@@ -377,31 +412,173 @@
 
     const targets = ['candleChart', 'heikinChart', 'volCandleChart', 'hollowChart', 'lineChart', 'areaChart', 'barChart'];
 
-    // İsimleri karşılaştırırken daha esnek bir yöntem kullanıyoruz
+    // İndikatör ismini normalize et
     const searchKey = indName.toLowerCase().trim();
+    let foundAny = false;
 
     targets.forEach(chartId => {
         const gd = document.getElementById(chartId);
-        if (!gd || !gd.data) return;
+        if (!gd || !gd._fullData) return;
 
         var indices = [];
-        gd.data.forEach((trace, index) => {
+        gd._fullData.forEach((trace, index) => {
             const tName = (trace.name || "").toLowerCase();
 
-            // HV için özel kontrol ve genel arama
+            // TÜM İNDİKATÖRLER İÇİN ÖZEL EŞLEŞTİRME
             if (tName.includes(searchKey) ||
+                // Bollinger Bantları
+                (searchKey === 'bollinger' && (tName.includes('bb') || tName.includes('bollinger'))) ||
+                // Donchian Kanalları
+                (searchKey === 'donchian' && (tName.includes('dcl') || tName.includes('dcm') || tName.includes('dcu'))) ||
+                // Ichimoku
+                (searchKey === 'ichimoku' && (tName.includes('span') || tName.includes('ikou') || tName.includes('chikou') || tName.includes('senkou'))) ||
+                // EMA
+                (searchKey === 'ema' && tName.includes('ema') && !tName.includes('sma')) ||
+                // ALMA
+                (searchKey === 'alma' && tName.includes('alma')) ||
+                // WMA
+                (searchKey === 'wma' && tName.includes('wma')) ||
+                // Williams Fractals
+                (searchKey === 'fractal' && (tName.includes('bear') || tName.includes('bull'))) ||
+                // Chaikin Osc
+                (searchKey === 'chaikin osc' && tName.includes('adosc')) ||
+                // RSI
+                (searchKey === 'rsi' && tName.includes('rsi')) ||
+                // CKS (Chande Kroll Stop)
+                (searchKey === 'cks' && (tName.includes('cks') || tName.includes('chande kroll'))) ||
+                // Chande Momentum
+                (searchKey === 'chande momentum' && tName.includes('cmo')) ||
+                // SMI
+                (searchKey === 'smi' && tName.includes('smi')) ||
+                // PSAR
+                (searchKey === 'psar' && tName.includes('psar')) ||
+                // Chandelier
+                (searchKey === 'chandelier' && tName.includes('chandelier')) ||
+                // KAMA
+                (searchKey === 'kama' && tName.includes('kama')) ||
+                // SMA 50
+                (searchKey === 'sma 50' && (tName.includes('sma50') || tName.includes('sma 50'))) ||
+                // SMA 200
+                (searchKey === 'sma 200' && (tName.includes('sma200') || tName.includes('sma 200'))) ||
+                // MA CROSS (Golden/Death Cross)
+                (searchKey === 'ma cross' && (tName.includes('gold') || tName.includes('death') || tName.includes('cross'))) ||
+                // KST
+                (searchKey === 'kst' && tName.includes('kst')) ||
+                // NVI
+                (searchKey === 'nvi' && tName.includes('nvi')) ||
+                // RVI
+                (searchKey === 'rvi' && tName.includes('rvi')) ||
+                // PMO
+                (searchKey === 'pmo' && tName.includes('pmo')) ||
+                // LRC
+                (searchKey === 'lrc' && tName.includes('lrc')) ||
+                // Special K
+                (searchKey === 'special k' && tName.includes('spk')) ||
+                // Supertrend
+                (searchKey === 'supertrend' && tName.includes('supert')) ||
+                // Ultimate Osc
+                (searchKey === 'ultimate osc' && tName.includes('uo')) ||
+                // Knoxville Bull
+                (searchKey === 'knoxville bull' && (tName.includes('knox') && tName.includes('bull'))) ||
+                // Knoxville Bear
+                (searchKey === 'knoxville bear' && (tName.includes('knox') && tName.includes('bear'))) ||
+                // TSI
+                (searchKey === 'tsi' && tName.includes('tsi')) ||
+                // Ulcer Index
+                (searchKey === 'ulcer index' && tName.includes('ui')) ||
+                // Volatilite
                 (searchKey === 'volatilite' && tName.includes('hv')) ||
-                (searchKey === 'bollinger' && tName.includes('bb')) ||
-                (searchKey === 'ichimoku' && (tName.includes('span') || tName.includes('chikou')))) {
+                // TRIX
+                (searchKey === 'trix' && tName.includes('trix')) ||
+                // DPO
+                (searchKey === 'dpo' && tName.includes('dpo')) ||
+                // Zarf
+                (searchKey === 'zarf' && (tName.includes('zarf') || tName.includes('envelope'))) ||
+                // Coppock
+                (searchKey === 'coppock' && (tName.includes('copc') || tName.includes('coppock'))) ||
+                // Aroon
+                (searchKey === 'aroon' && tName.includes('aroon') && !tName.includes('osc')) ||
+                // Aroon Osc
+                (searchKey === 'aroon osc' && tName.includes('aroon') && tName.includes('osc'))) {
                 indices.push(index);
             }
         });
 
         if (indices.length > 0) {
+            foundAny = true;
             Plotly.restyle(chartId, update, indices);
+
+            // Kullanıcıya bildirim
+            if (isActive) {
+                showToast(`✅ ${indName} aktif`, 'success');
+            } else {
+                showToast(`⏸️ ${indName} gizlendi`, 'info');
+            }
         }
     });
+
+    if (!foundAny && isActive) {
+        showToast(`⚠️ ${indName} için veri bulunamadı`, 'warning');
+    }
 }
+
+// TOAST BİLDİRİM FONKSİYONU
+function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        background: ${type === 'success' ? '#00ffbb' : type === 'warning' ? '#ffaa00' : '#3b82f6'};
+        color: #020617; padding: 12px 24px; border-radius: 8px;
+        font-family: 'Fira Code'; font-size: 0.9rem; z-index: 9999;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5); animation: slideIn 0.3s;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+// BAŞLANGIÇTA TÜM İNDİKATÖRLERİ GİZLE
+function hideAllIndicators() {
+    const targets = ['candleChart', 'heikinChart', 'volCandleChart', 'hollowChart', 'lineChart', 'areaChart', 'barChart'];
+
+    targets.forEach(chartId => {
+        const gd = document.getElementById(chartId);
+        if (!gd || !gd._fullData) return;
+
+        const indices = gd._fullData.map((_, i) => i);
+        const indicatorIndices = indices.filter(i => {
+            const name = (gd._fullData[i].name || "").toLowerCase();
+            return !name.includes('mum') && !name.includes('candle') &&
+                   !name.includes('fiyat') && !name.includes('kapanış') &&
+                   !name.includes('hacim') && !name.includes('volume');
+        });
+
+        if (indicatorIndices.length > 0) {
+            Plotly.restyle(chartId, { visible: 'legendonly' }, indicatorIndices);
+        }
+    });
+
+    document.querySelectorAll('.ind-row').forEach(btn => {
+        btn.classList.remove('active');
+    });
+}
+
+// initApp'e ekle
+function initApp() {
+    const defaultChart = 'candle';
+    renderSingleChart(defaultChart);
+    switchMainView(defaultChart);
+
+    setTimeout(() => {
+        hideAllIndicators();
+    }, 1000);
+}
+
+    // TÜM İNDİKATÖRLERİ GİZLE BUTONU
+    function hideAllIndicatorsManually() {
+        hideAllIndicators();
+        showToast('👁️ Tüm indikatörler gizlendi', 'info');
+    }
 
     function attachNoteListener(gd) {
         gd.on('plotly_click', (d) => {

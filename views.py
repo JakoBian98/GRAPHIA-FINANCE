@@ -481,7 +481,6 @@ def kripto_ısı_haritası():
         if tickers is not None:
             del tickers
         if fig is not None:
-            fig.close()
             del fig
         if graph_html is not None:
             del graph_html
@@ -808,7 +807,6 @@ def hisse_ısı_haritası():
                 except:
                     pass
         if fig is not None:
-            fig.close()
             del fig
         if graph_html is not None:
             del graph_html
@@ -1479,6 +1477,7 @@ def Finance():
                     "Dİ_PLUS": güncel_di_plus,
                     "di_minüs": güncel_di_minüs
                 }
+                ai_response = None
 
                 emtia_isaretleri = ["=", "USD", "EUR", "TRY", "X", "GC", "SI", "PA", "PL"]
 
@@ -1499,7 +1498,6 @@ def Finance():
                         f"BU YORUMUN TAMAMINI {Dil} dilinde yap: {ai_ozet_veri}")
 
                 try:
-                    # Model olarak Groq'un en iyisi olan llama-3.3-70b-versatile kullanıyoruz
                     ai_response = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
                         messages=[
@@ -1517,6 +1515,7 @@ def Finance():
                     )
                     ai_analiz_notu = ai_response.choices[0].message.content
                 except Exception:
+                    ai_response = None
                     ai_analiz_notu = f"⚠️ Analiz motorunda bir sorun oluştu:"
 
 
@@ -1568,11 +1567,9 @@ def Finance():
     except Exception as e:
         return f"<h1>🛠️ Beklenmedik Bir Hata</h1><p>Sistem yöneticisine iletilmek üzere kaydedildi.</p>"
     finally:
-        # ----- 1. TICKER NESNELERİNİ TEMİZLE -----
         if veri is not None:
             del veri
 
-        # ----- 2. DATAFRAME'LERİ TEMİZLE -----
         dataframe_list = [
             'gecmis_', 'df', 'ema_df', 'veri_ath', 'df_adx',
             'kar', 'max_geçmiş', 'geçmiş_hepsi', 'insider_verisi',
@@ -1585,8 +1582,6 @@ def Finance():
                     del locals()[var_name]
                 except:
                     pass
-
-        # ----- 3. BÜYÜK LİSTELERİ TEMİZLE -----
         list_list = [
             'ema_listesi_tablo', 'ema_listesi_sözlük', 'periyotlar',
             'haber_metni', 'son_haberler', 'alımlar'
@@ -4113,7 +4108,6 @@ def çoklu_grafikler_penceresi():
             del fiyat2
 
         if fig is not None:
-            fig.close()
             del fig
 
         if x_ekseni is not None:
@@ -4315,8 +4309,6 @@ def dolar_bazlı_grafik_ekranı():
             del sembol_df
         if usd_df is not None:
             del usd_df
-        if kur_df is not None:
-            del kur_df
         if veri is not None:
             del veri
         if data is not None:

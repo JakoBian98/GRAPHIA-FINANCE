@@ -1546,6 +1546,8 @@ def Finance():
                                    kuruluş_yılı=kuruluş_yılı,indikatör=iştah,renk=renk,güven_mesajı=güven_mesajı,peg_durum=peg_durum,insider_mesajı=insider_mesajı,öneriler=öneriler,
                                    ema_listesi = ema_listesi_tablo,ema_sözlük=ema_listesi_sözlük,long_name=long_name,bilanço_tarihi=bilanço_tarihi,bilanço_beklenti=bilanço_beklenti)
 
+            del ai_response
+
     except (requests.exceptions.ConnectionError, ConnectionError):
         return "<h1>🌐 Bağlantı Hatası</h1><p>İnternet bağlantınızı kontrol edin veya veri sağlayıcısının erişilebilir olduğundan emin olun.</p>"
 
@@ -1593,9 +1595,6 @@ def Finance():
                     del locals()[var_name]
                 except:
                     pass
-
-        if ai_response is not None:
-            del ai_response
         gc.collect()
         gc.collect(generation=2)
 
